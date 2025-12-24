@@ -254,6 +254,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: spacing.md,
     paddingVertical: spacing.xs,
+    color: theme.colors.buttonclr,
   },
   linkButton: {
     marginTop: spacing.md,

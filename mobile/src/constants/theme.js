@@ -4,6 +4,7 @@ export const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
+    buttonclr: '#F09E54',
     primary: '#6200EE',
     secondary: '#03DAC6',
     error: '#B00020',

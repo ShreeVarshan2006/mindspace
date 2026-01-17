@@ -6,11 +6,10 @@ import {
   Platform,
   ScrollView,
   Alert,
-  Image,
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TextInput, Button, Text, HelperText, Checkbox } from 'react-native-paper';
+import { TextInput, Text } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { login, clearError } from '../../redux/slices/authSlice';
@@ -23,34 +22,12 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const validate = () => {
-    const newErrors = {};
-
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-
-    if (!acceptedPrivacy) {
-      newErrors.privacy = 'You must accept the Privacy Policy and Terms';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleLogin = async () => {
-    if (!validate()) return;
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
 
     try {
       await dispatch(login({ email, password })).unwrap();
@@ -72,104 +49,102 @@ const LoginScreen = ({ navigation }) => {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.content}>
             {/* Dual Logos */}
             <View style={styles.logosContainer}>
               <View style={styles.logoCircle}>
-                <Icon name="brain" size={50} color={theme.colors.primary} />
+                <Icon name="brain" size={48} color="#FFFFFF" />
               </View>
               <View style={styles.logoSpacer} />
-              <View style={styles.logoCircle}>
-                <Icon name="school" size={50} color={theme.colors.secondary} />
+              <View style={styles.srmLogoContainer}>
+                <Icon name="school" size={48} color="#5B8DBE" />
               </View>
             </View>
 
+            {/* Title */}
             <Text style={styles.title}>Welcome to MindSpace</Text>
-            <Text style={styles.subtitle}>Your safe space for mental wellness</Text>
+            <Text style={styles.subtitle}>
+              Sign in or create an account to get started.
+            </Text>
 
-            <TextInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              mode="outlined"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={!!errors.email}
-              style={styles.input}
-            />
-            <HelperText type="error" visible={!!errors.email}>
-              {errors.email}
-            </HelperText>
-
-            <TextInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              mode="outlined"
-              secureTextEntry={!showPassword}
-              error={!!errors.password}
-              style={styles.input}
-              right={
-                <TextInput.Icon
-                  icon={showPassword ? 'eye-off' : 'eye'}
-                  onPress={() => setShowPassword(!showPassword)}
-                />
-              }
-            />
-            <HelperText type="error" visible={!!errors.password}>
-              {errors.password}
-            </HelperText>
-
-            {error && (
-              <HelperText type="error" visible={true} style={styles.errorText}>
-                {error}
-              </HelperText>
-            )}
-
-            {/* Privacy Policy and Terms Acceptance */}
-            <View style={styles.privacyContainer}>
-              <Checkbox
-                status={acceptedPrivacy ? 'checked' : 'unchecked'}
-                onPress={() => setAcceptedPrivacy(!acceptedPrivacy)}
-                color={theme.colors.primary}
+            {/* Email Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email ID</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                mode="outlined"
+                placeholder="john.doe@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
+                outlineColor="#E0E0E0"
+                activeOutlineColor="#000000"
+                placeholderTextColor="#999999"
+                theme={{
+                  colors: {
+                    text: '#000000',
+                    placeholder: '#999999',
+                  },
+                  roundness: 12,
+                }}
               />
-              <View style={styles.privacyTextContainer}>
-                <Text style={styles.privacyText}>
-                  I accept the{' '}
-                  <Text style={styles.privacyLink} onPress={() => Alert.alert('Privacy Policy', 'Your data is anonymized and encrypted. We never share your personal information.')}>
-                    Privacy Policy
-                  </Text>
-                  {' '}and{' '}
-                  <Text style={styles.privacyLink} onPress={() => Alert.alert('Terms & Conditions', 'By using MindSpace, you agree to maintain confidentiality and use the platform responsibly.')}>
-                    Terms & Conditions
-                  </Text>
-                </Text>
-              </View>
             </View>
-            {errors.privacy && (
-              <HelperText type="error" visible={true} style={styles.errorText}>
-                {errors.privacy}
-              </HelperText>
-            )}
 
-            <Button
-              mode="contained"
+            {/* Password Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                mode="outlined"
+                placeholder="••••••••"
+                secureTextEntry={!showPassword}
+                style={styles.input}
+                outlineColor="#E0E0E0"
+                activeOutlineColor="#000000"
+                placeholderTextColor="#999999"
+                theme={{
+                  colors: {
+                    text: '#000000',
+                    placeholder: '#999999',
+                  },
+                  roundness: 12,
+                }}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? 'eye-off' : 'eye'}
+                    onPress={() => setShowPassword(!showPassword)}
+                    color="#999999"
+                  />
+                }
+              />
+            </View>
+
+            {/* Login Button */}
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              loading={isLoading}
-              disabled={isLoading || !acceptedPrivacy}
-              style={styles.button}
+              disabled={isLoading}
+              activeOpacity={0.8}
             >
-              Login
-            </Button>
+              <Text style={styles.loginButtonText}>
+                {isLoading ? 'Loading...' : 'Login'}
+              </Text>
+            </TouchableOpacity>
 
-            <Button
-              mode="text"
+            {/* Register Button */}
+            <TouchableOpacity
+              style={styles.registerButton}
               onPress={() => navigation.navigate('Register')}
-              style={styles.linkButton}
+              activeOpacity={0.8}
             >
-              Don't have an account? Register
-            </Button>
+              <Text style={styles.registerButtonText}>Register</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -180,7 +155,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -188,79 +163,103 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
+    paddingVertical: spacing.xl,
   },
   content: {
-    padding: spacing.lg,
+    paddingHorizontal: 32,
   },
   logosContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: 40,
     marginTop: spacing.lg,
   },
   logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.colors.surface,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#5B8DBE',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   logoSpacer: {
-    width: 8,
+    width: 16,
+  },
+  srmLogoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E8F0F8',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    color: '#000000',
     textAlign: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: 12,
+    letterSpacing: 0.2,
   },
   subtitle: {
     fontSize: 16,
-    color: theme.colors.placeholder,
+    color: '#666666',
     textAlign: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: 40,
+    lineHeight: 22,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#000000',
+    marginBottom: 8,
+    letterSpacing: 0.1,
   },
   input: {
-    marginBottom: spacing.xs,
+    backgroundColor: '#FFFFFF',
+    fontSize: 16,
   },
-  privacyContainer: {
-    flexDirection: 'row',
+  loginButton: {
+    backgroundColor: '#F09E54',
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    justifyContent: 'center',
+    marginTop: 12,
+    elevation: 2,
+    shadowColor: '#F09E54',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  privacyTextContainer: {
-    flex: 1,
-    marginLeft: spacing.xs,
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
-  privacyText: {
-    fontSize: 13,
-    color: theme.colors.text,
-    lineHeight: 20,
-  },
-  privacyLink: {
-    color: theme.colors.primary,
+  loginButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: '600',
-    textDecorationLine: 'underline',
+    letterSpacing: 0.3,
   },
-  button: {
-    marginTop: spacing.md,
-    paddingVertical: spacing.xs,
-    color: theme.colors.buttonclr,
+  registerButton: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    borderWidth: 1.5,
+    borderColor: '#000000',
   },
-  linkButton: {
-    marginTop: spacing.md,
-  },
-  errorText: {
-    textAlign: 'center',
+  registerButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 });
 

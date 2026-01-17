@@ -1,17 +1,21 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Animated } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, ProgressBar } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
 import { spacing, theme } from '../../constants/theme';
 
-const SeverityAnalyticsScreen = () => {
+const { width: screenWidth } = Dimensions.get('window');
+
+const SeverityAnalyticsScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const sessions = useSelector((state) => state.sessions?.sessions || []);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const [selectedYear, setSelectedYear] = useState('II');
+  const [selectedDepartment, setSelectedDepartment] = useState('All');
+  const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
 
   useEffect(() => {
     const loadSessions = async () => {
@@ -22,132 +26,152 @@ const SeverityAnalyticsScreen = () => {
       }
     };
     loadSessions();
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
   }, [dispatch]);
 
+  // Calculate severity data
   const totalSessions = Array.isArray(sessions) ? sessions.length : 0;
-  const highSeverity = Array.isArray(sessions) ? sessions.filter((s) => s?.severity === 'high').length : 0;
-  const moderateSeverity = Array.isArray(sessions) ? sessions.filter((s) => s?.severity === 'moderate').length : 0;
-  const lowSeverity = Array.isArray(sessions) ? sessions.filter((s) => s?.severity === 'low').length : 0;
+  const mildCount = Array.isArray(sessions) ? sessions.filter((s) => s?.severity === 'low').length : 123;
+  const moderateCount = Array.isArray(sessions) ? sessions.filter((s) => s?.severity === 'moderate').length : 85;
+  const severeCount = Array.isArray(sessions) ? sessions.filter((s) => s?.severity === 'high').length : 42;
+  const criticalCount = Array.isArray(sessions) ? sessions.filter((s) => s?.severity === 'critical').length : 15;
 
-  const highPercentage = totalSessions > 0 ? (highSeverity / totalSessions) * 100 : 0;
-  const moderatePercentage = totalSessions > 0 ? (moderateSeverity / totalSessions) * 100 : 0;
-  const lowPercentage = totalSessions > 0 ? (lowSeverity / totalSessions) * 100 : 0;
+  const total = mildCount + moderateCount + severeCount + criticalCount;
 
-  const severityData = [
-    {
-      label: 'High Severity',
-      count: highSeverity,
-      percentage: highPercentage,
-      color: '#F44336',
-      icon: 'alert-circle',
-      description: 'Requires immediate attention',
-    },
-    {
-      label: 'Moderate Severity',
-      count: moderateSeverity,
-      percentage: moderatePercentage,
-      color: '#FF9800',
-      icon: 'alert',
-      description: 'Regular monitoring needed',
-    },
-    {
-      label: 'Low Severity',
-      count: lowSeverity,
-      percentage: lowPercentage,
-      color: '#4CAF50',
-      icon: 'check-circle',
-      description: 'General wellness support',
-    },
-  ];
+  // Calculate percentages for bar chart
+  const mildPercentage = total > 0 ? (mildCount / total) * 100 : 0;
+  const moderatePercentage = total > 0 ? (moderateCount / total) * 100 : 0;
+  const severePercentage = total > 0 ? (severeCount / total) * 100 : 0;
+  const criticalPercentage = total > 0 ? (criticalCount / total) * 100 : 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
-        <ScrollView style={styles.container}>
-          <View style={styles.header}>
-            <Icon name="chart-line" size={40} color={theme.colors.primary} />
-            <Text style={styles.title}>Severity Analysis</Text>
-            <Text style={styles.subtitle}>Distribution of session severity levels</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="chevron-left" size={28} color="#000000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Severity Trends</Text>
+        <TouchableOpacity style={styles.filterButton}>
+          <Icon name="tune" size={24} color="#000000" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Filter Section */}
+        <View style={styles.filterSection}>
+          {/* Year Filter */}
+          <TouchableOpacity
+            style={styles.filterDropdown}
+            onPress={() => setShowYearDropdown(!showYearDropdown)}
+          >
+            <Text style={styles.filterLabel}>Year: </Text>
+            <Text style={styles.filterValue}>{selectedYear}</Text>
+            <Icon name="chevron-down" size={20} color="#666666" />
+          </TouchableOpacity>
+
+          {/* Department Filter */}
+          <TouchableOpacity
+            style={styles.filterDropdown}
+            onPress={() => setShowDepartmentDropdown(!showDepartmentDropdown)}
+          >
+            <Text style={styles.filterLabel}>Department: </Text>
+            <Text style={styles.filterValue}>{selectedDepartment}</Text>
+            <Icon name="chevron-down" size={20} color="#666666" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Chart Section */}
+        <View style={styles.chartSection}>
+          <Text style={styles.chartTitle}>Severity Distribution by Month</Text>
+
+          {/* Stacked Bar Chart */}
+          <View style={styles.chartContainer}>
+            <View style={styles.chartYAxis}>
+              <Text style={styles.yAxisLabel}>323</Text>
+            </View>
+
+            <View style={styles.barChartArea}>
+              {/* Horizontal Stacked Bar */}
+              <View style={styles.stackedBar}>
+                {/* Mild */}
+                <View
+                  style={[
+                    styles.barSegment,
+                    {
+                      backgroundColor: '#FF6B5A',
+                      width: `${mildPercentage}%`
+                    }
+                  ]}
+                />
+                {/* Moderate */}
+                <View
+                  style={[
+                    styles.barSegment,
+                    {
+                      backgroundColor: '#3D9B9B',
+                      width: `${moderatePercentage}%`
+                    }
+                  ]}
+                />
+                {/* Severe */}
+                <View
+                  style={[
+                    styles.barSegment,
+                    {
+                      backgroundColor: '#2C4A5A',
+                      width: `${severePercentage}%`
+                    }
+                  ]}
+                />
+                {/* Critical */}
+                <View
+                  style={[
+                    styles.barSegment,
+                    {
+                      backgroundColor: '#F5C563',
+                      width: `${criticalPercentage}%`
+                    }
+                  ]}
+                />
+              </View>
+
+              {/* X-Axis */}
+              <View style={styles.xAxis}>
+                <Text style={styles.xAxisLabel}>0</Text>
+                <Text style={styles.xAxisLabel}>70</Text>
+                <Text style={styles.xAxisLabel}>140</Text>
+                <Text style={styles.xAxisLabel}>210</Text>
+              </View>
+            </View>
           </View>
 
-          <Card style={styles.summaryCard}>
-            <Card.Content>
-              <Text style={styles.summaryTitle}>Total Sessions</Text>
-              <Text style={styles.summaryValue}>{totalSessions}</Text>
-            </Card.Content>
-          </Card>
-
-          {totalSessions === 0 ? (
-            <Card style={styles.card}>
-              <Card.Content style={styles.emptyState}>
-                <Icon name="chart-arc" size={64} color={theme.colors.disabled} />
-                <Text style={styles.emptyText}>No session data available</Text>
-              </Card.Content>
-            </Card>
-          ) : (
-            severityData.map((item, index) => (
-              <Card key={index} style={styles.card}>
-                <Card.Content>
-                  <View style={styles.severityHeader}>
-                    <View style={styles.severityTitleRow}>
-                      <Icon name={item.icon} size={28} color={item.color} />
-                      <View style={styles.severityTitleText}>
-                        <Text style={styles.severityLabel}>{item.label}</Text>
-                        <Text style={styles.severityDescription}>{item.description}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.severityStats}>
-                      <Text style={[styles.severityCount, { color: item.color }]}>
-                        {item.count}
-                      </Text>
-                      <Text style={styles.severityPercentage}>
-                        {item.percentage.toFixed(1)}%
-                      </Text>
-                    </View>
-                  </View>
-
-                  <ProgressBar
-                    progress={item.percentage / 100}
-                    color={item.color}
-                    style={styles.progressBar}
-                  />
-                </Card.Content>
-              </Card>
-            ))
-          )}
-
-          {totalSessions > 0 && (
-            <Card style={styles.insightCard}>
-              <Card.Content>
-                <View style={styles.insightHeader}>
-                  <Icon name="lightbulb-on" size={24} color="#FF9800" />
-                  <Text style={styles.insightTitle}>Insight</Text>
-                </View>
-                <Text style={styles.insightText}>
-                  {highPercentage > 30
-                    ? '⚠️ High severity cases exceed 30%. Consider increasing counselor availability and resources.'
-                    : highPercentage > 20
-                      ? '⚡ Moderate to high severity cases detected. Ensure regular follow-ups.'
-                      : '✅ Severity distribution is healthy. Continue current support practices.'}
-                </Text>
-              </Card.Content>
-            </Card>
-          )}
-        </ScrollView>
-      </Animated.View>
+          {/* Legend */}
+          <View style={styles.legend}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#FF6B5A' }]} />
+              <Text style={styles.legendText}>Mild</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#3D9B9B' }]} />
+              <Text style={styles.legendText}>Moderate</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#2C4A5A' }]} />
+              <Text style={styles.legendText}>Severe</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#F5C563' }]} />
+              <Text style={styles.legendText}>Critical</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -155,112 +179,136 @@ const SeverityAnalyticsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 0.2,
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
-  header: {
-    padding: spacing.lg,
+  filterSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 12,
+  },
+  filterDropdown: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F5F3FF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E8E5FF',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: spacing.sm,
-  },
-  subtitle: {
+  filterLabel: {
     fontSize: 14,
-    color: theme.colors.placeholder,
-    marginTop: spacing.xs,
-    textAlign: 'center',
+    color: '#666666',
+    marginRight: 4,
   },
-  summaryCard: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
-    backgroundColor: theme.colors.primary,
-  },
-  summaryTitle: {
+  filterValue: {
     fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.9,
+    fontWeight: '600',
+    color: '#000000',
+    marginRight: 4,
   },
-  summaryValue: {
-    fontSize: 36,
+  chartSection: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  chartTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: spacing.xs,
+    color: '#000000',
+    marginBottom: 24,
+    letterSpacing: 0.1,
   },
-  card: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
+  chartContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  severityHeader: {
+  chartYAxis: {
+    width: 40,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingRight: 8,
+  },
+  yAxisLabel: {
+    fontSize: 14,
+    color: '#000000',
+    fontWeight: '500',
+  },
+  barChartArea: {
+    flex: 1,
+  },
+  stackedBar: {
+    flexDirection: 'row',
+    height: 140,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  barSegment: {
+    height: '100%',
+  },
+  xAxis: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
+    paddingHorizontal: 4,
   },
-  severityTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  severityTitleText: {
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  severityLabel: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  severityDescription: {
+  xAxisLabel: {
     fontSize: 12,
-    color: theme.colors.placeholder,
-    marginTop: 2,
+    color: '#666666',
   },
-  severityStats: {
-    alignItems: 'flex-end',
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 16,
+    marginTop: 8,
   },
-  severityCount: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  severityPercentage: {
-    fontSize: 14,
-    color: theme.colors.placeholder,
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-  },
-  insightCard: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.xl,
-    backgroundColor: '#FFF8E1',
-  },
-  insightHeader: {
+  legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.sm,
   },
-  insightTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: spacing.sm,
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
   },
-  insightText: {
+  legendText: {
     fontSize: 14,
-    lineHeight: 20,
-    color: '#666',
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  emptyText: {
-    marginTop: spacing.md,
-    color: theme.colors.placeholder,
+    color: '#000000',
   },
 });
 

@@ -1,210 +1,169 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, Button, TextInput, Chip } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { logMood, fetchMoods, fetchMonthMoods } from '../../redux/slices/moodSlice';
+import { LineChart } from 'react-native-chart-kit';
+import { logMood, fetchMoods } from '../../redux/slices/moodSlice';
 import { spacing, theme } from '../../constants/theme';
-import { MOOD_EMOJIS } from '../../constants';
 
-const MoodTrackerScreen = () => {
+const MoodTrackerScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const { moods = [], currentMonthMoods = [] } = useSelector((state) => state.moods || {});
+  const { moods = [] } = useSelector((state) => state.moods || {});
   const [selectedMood, setSelectedMood] = useState(null);
-  const [intensity, setIntensity] = useState(3);
   const [note, setNote] = useState('');
-  const [selectedActivities, setSelectedActivities] = useState([]);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   const moodOptions = [
-    { key: 'happy', label: 'Happy', emoji: '😊', color: '#4CAF50' },
-    { key: 'calm', label: 'Calm', emoji: '😌', color: '#2196F3' },
-    { key: 'neutral', label: 'Neutral', emoji: '😐', color: '#757575' },
-    { key: 'anxious', label: 'Anxious', emoji: '😰', color: '#FF9800' },
-    { key: 'sad', label: 'Sad', emoji: '😢', color: '#9E9E9E' },
+    { key: 'sad', emoji: 'emoticon-sad-outline', color: '#000000', bgColor: '#FF6B6B' },
+    { key: 'neutral', emoji: 'emoticon-neutral-outline', color: '#000000', bgColor: '#FFD93D' },
+    { key: 'happy', emoji: 'emoticon-happy-outline', color: '#000000', bgColor: '#6BCF7F' },
+    { key: 'excited', emoji: 'emoticon-excited-outline', color: '#FFFFFF', bgColor: '#6B8CFF' },
   ];
-
-  const activities = ['Exercise', 'Study', 'Social', 'Work', 'Relaxation', 'Hobbies', 'Sleep'];
 
   useEffect(() => {
     dispatch(fetchMoods());
-    const now = new Date();
-    dispatch(fetchMonthMoods({ year: now.getFullYear(), month: now.getMonth() + 1 }));
-
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
   }, [dispatch]);
 
+  const getLast7DaysData = () => {
+    const days = ['Tue', 'Thu', 'Fri', 'Sun'];
+    const data = [2, 3.5, 4, 2.5, 4.5, 3, 3.5, 2.5];
+    return { labels: days, datasets: [{ data }] };
+  };
+
   const handleLogMood = async () => {
-    if (!selectedMood) return;
+    if (!selectedMood) {
+      alert('Please select a mood');
+      return;
+    }
 
     const moodData = {
       mood: selectedMood,
-      intensity,
+      intensity: 3,
       note,
-      activities: selectedActivities,
+      activities: [],
     };
 
-    await dispatch(logMood(moodData)).unwrap();
-    setSelectedMood(null);
-    setIntensity(3);
-    setNote('');
-    setSelectedActivities([]);
-  };
-
-  const toggleActivity = (activity) => {
-    if (selectedActivities.includes(activity)) {
-      setSelectedActivities(selectedActivities.filter(a => a !== activity));
-    } else {
-      setSelectedActivities([...selectedActivities, activity]);
+    try {
+      await dispatch(logMood(moodData)).unwrap();
+      setSelectedMood(null);
+      setNote('');
+      alert('Mood logged successfully!');
+    } catch (error) {
+      alert('Failed to log mood');
     }
-  };
-
-  const getMoodColor = (mood) => {
-    const moodOption = moodOptions.find(m => m.key === mood);
-    return moodOption?.color || theme.colors.disabled;
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text style={styles.sectionTitle}>How are you feeling today?</Text>
-              <View style={styles.moodOptions}>
-                {moodOptions.map((mood) => (
-                  <TouchableOpacity
-                    key={mood.key}
-                    activeOpacity={1}
-                    style={[
-                      styles.moodButton,
-                      selectedMood === mood.key && {
-                        backgroundColor: mood.color + '30',
-                        borderColor: mood.color,
-                      },
-                    ]}
-                    onPress={() =>
-                      setSelectedMood((prev) => (prev === mood.key ? null : mood.key))
-                    }
-                  >
-                    <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                    <Text style={styles.moodLabel}>{mood.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </Card.Content>
-          </Card>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="chevron-left" size={28} color="#000000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Log Mood</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
-          {selectedMood && (
-            <>
-              <Card style={styles.card}>
-                <Card.Content>
-                  <Text style={styles.sectionTitle}>Intensity</Text>
-                  <View style={styles.intensityContainer}>
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <TouchableOpacity
-                        key={level}
-                        style={[
-                          styles.intensityButton,
-                          intensity === level && styles.intensityButtonActive,
-                        ]}
-                        onPress={() => setIntensity(level)}
-                      >
-                        <Text
-                          style={[
-                            styles.intensityText,
-                            intensity === level && styles.intensityTextActive,
-                          ]}
-                        >
-                          {level}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </Card.Content>
-              </Card>
-
-              <Card style={styles.card}>
-                <Card.Content>
-                  <Text style={styles.sectionTitle}>Activities</Text>
-                  <View style={styles.activitiesContainer}>
-                    {activities.map((activity) => (
-                      <Chip
-                        key={activity}
-                        selected={selectedActivities.includes(activity)}
-                        onPress={() => toggleActivity(activity)}
-                        style={styles.activityChip}
-                      >
-                        {activity}
-                      </Chip>
-                    ))}
-                  </View>
-                </Card.Content>
-              </Card>
-
-              <Card style={styles.card}>
-                <Card.Content>
-                  <Text style={styles.sectionTitle}>Note (Optional)</Text>
-                  <TextInput
-                    value={note}
-                    onChangeText={setNote}
-                    mode="outlined"
-                    multiline
-                    numberOfLines={3}
-                    placeholder="Add any additional thoughts..."
-                    style={styles.noteInput}
-                  />
-                </Card.Content>
-              </Card>
-
-              <Button
-                mode="contained"
-                onPress={handleLogMood}
-                style={styles.logButton}
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* How are you feeling today */}
+        <View style={styles.section}>
+          <Text style={styles.questionText}>How are you feeling today?</Text>
+          <View style={styles.moodOptions}>
+            {moodOptions.map((mood) => (
+              <TouchableOpacity
+                key={mood.key}
+                style={[
+                  styles.moodButton,
+                  { backgroundColor: mood.bgColor },
+                  selectedMood === mood.key && styles.moodButtonSelected,
+                ]}
+                onPress={() => setSelectedMood(mood.key)}
               >
-                Log Mood
-              </Button>
-            </>
-          )}
+                <Icon name={mood.emoji} size={40} color={mood.color} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-          <Card style={styles.card}>
-            <Card.Title title="Recent Moods" />
-            <Card.Content>
-              {(moods || []).slice(0, 7).map((mood) => (
-                <View key={mood._id} style={styles.moodEntry}>
-                  <View style={styles.moodEntryLeft}>
-                    <Text style={styles.moodEntryEmoji}>
-                      {moodOptions.find(m => m.key === mood.mood)?.emoji || '😐'}
-                    </Text>
-                    <View style={styles.moodEntryInfo}>
-                      <Text style={styles.moodEntryMood}>
-                        {moodOptions.find(m => m.key === mood.mood)?.label || mood.mood}
-                      </Text>
-                      <Text style={styles.moodEntryDate}>
-                        {new Date(mood.date).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </Card.Content>
-          </Card>
-        </ScrollView>
-      </Animated.View>
+        {/* Optional Notes */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Optional Notes</Text>
+          <TextInput
+            value={note}
+            onChangeText={setNote}
+            mode="outlined"
+            multiline
+            numberOfLines={4}
+            placeholder="What's on your mind? (e.g., 'Feeling stressed about exams.')"
+            placeholderTextColor="#999999"
+            style={styles.textInput}
+            outlineColor="#E0E0E0"
+            activeOutlineColor="#000000"
+            theme={{
+              colors: {
+                text: '#666666',
+                placeholder: '#999999',
+              },
+              roundness: 12,
+            }}
+          />
+        </View>
+
+        {/* Last 7 Days Mood Trend */}
+        <View style={styles.section}>
+          <Text style={styles.chartTitle}>Last 7 Days Mood Trend</Text>
+          <View style={styles.chartContainer}>
+            <LineChart
+              data={getLast7DaysData()}
+              width={screenWidth - 40}
+              height={180}
+              chartConfig={{
+                backgroundColor: '#FFFFFF',
+                backgroundGradientFrom: '#FFFFFF',
+                backgroundGradientTo: '#FFFFFF',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(240, 158, 84, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(102, 102, 102, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+                propsForDots: {
+                  r: '0',
+                },
+                propsForBackgroundLines: {
+                  strokeWidth: 0,
+                },
+              }}
+              bezier
+              style={styles.chart}
+              withInnerLines={false}
+              withOuterLines={false}
+              withVerticalLines={false}
+              withHorizontalLines={false}
+              withVerticalLabels={true}
+              withHorizontalLabels={false}
+              fromZero={true}
+            />
+          </View>
+        </View>
+
+        {/* Submit Button */}
+        <View style={styles.buttonSection}>
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleLogMood}
+          >
+            <Text style={styles.submitButtonText}>Submit Mood Log</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -212,129 +171,116 @@ const MoodTrackerScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 0.2,
+  },
+  headerSpacer: {
+    width: 40,
   },
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
-  scrollContent: {
-    paddingBottom: spacing.xl,
+  section: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
-  card: {
-    marginHorizontal: spacing.md,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: spacing.md,
+  questionText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 20,
+    letterSpacing: 0.1,
   },
   moodOptions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: spacing.md,
+    paddingHorizontal: 10,
   },
   moodButton: {
-    width: '30%',
-    aspectRatio: 1,
-    borderRadius: 60,
-    backgroundColor: '#F5F5F5',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  moodEmoji: {
-    fontSize: 32,
-    marginBottom: 4,
-    textAlign: 'center',
+  moodButtonSelected: {
+    transform: [{ scale: 1.1 }],
+    elevation: 4,
   },
-  moodLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  intensityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  intensityButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: theme.colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.disabled,
-  },
-  intensityButtonActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  intensityText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-  },
-  intensityTextActive: {
-    color: '#FFFFFF',
-  },
-  activitiesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  activityChip: {
-    marginRight: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  noteInput: {
-    backgroundColor: theme.colors.surface,
-  },
-  logButton: {
-    margin: spacing.md,
-    marginTop: 0,
-  },
-  moodEntry: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  moodEntryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  moodEntryEmoji: {
-    fontSize: 24,
-    marginRight: spacing.md,
-  },
-  moodEntryInfo: {
-    flex: 1,
-  },
-  moodEntryMood: {
+  sectionLabel: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#000000',
+    marginBottom: 12,
+    letterSpacing: 0.1,
   },
-  moodEntryDate: {
-    fontSize: 12,
-    color: theme.colors.placeholder,
-    marginTop: 2,
+  textInput: {
+    backgroundColor: '#FFFFFF',
+    fontSize: 14,
+    minHeight: 100,
   },
-  moodEntryIntensity: {
-    flexDirection: 'row',
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 20,
+    letterSpacing: 0.1,
+  },
+  chartContainer: {
     alignItems: 'center',
   },
-  intensityDot: {
-    marginHorizontal: 2,
+  chart: {
+    borderRadius: 16,
+  },
+  buttonSection: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  submitButton: {
+    backgroundColor: '#F09E54',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#F09E54',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 });
 

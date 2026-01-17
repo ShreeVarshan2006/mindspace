@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Animated, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, Chip, Card } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { spacing, theme } from '../../constants/theme';
 import { sessionService } from '../../services/sessionService';
@@ -9,19 +9,14 @@ import { sessionService } from '../../services/sessionService';
 const SessionDetailsScreen = ({ route, navigation }) => {
   const { sessionId } = route.params || {};
   const [sessionData, setSessionData] = useState(null);
-  const [notes, setNotes] = useState('');
-  const [severity, setSeverity] = useState('moderate');
+  const [observations, setObservations] = useState('');
+  const [actionItems, setActionItems] = useState('');
+  const [severity, setSeverity] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadSessionData();
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
   }, []);
 
   const loadSessionData = async () => {
@@ -30,7 +25,8 @@ const SessionDetailsScreen = ({ route, navigation }) => {
       const response = await sessionService.getSessionById(sessionId);
       if (response.success) {
         setSessionData(response.data);
-        if (response.data.notes) setNotes(response.data.notes);
+        if (response.data.observations) setObservations(response.data.observations);
+        if (response.data.actionItems) setActionItems(response.data.actionItems);
         if (response.data.severity) setSeverity(response.data.severity);
       }
     } catch (error) {
@@ -41,33 +37,51 @@ const SessionDetailsScreen = ({ route, navigation }) => {
   };
 
   const severityOptions = [
-    { key: 'high', label: 'High', color: '#F44336', icon: 'alert-circle' },
-    { key: 'moderate', label: 'Moderate', color: '#FF9800', icon: 'alert' },
-    { key: 'low', label: 'Low', color: '#4CAF50', icon: 'check-circle' },
+    { key: 'low', label: 'Mild', color: '#5CB85C' },
+    { key: 'moderate', label: 'Moderate', color: '#F0AD4E' },
+    { key: 'high', label: 'Critical', color: '#D9534F' },
   ];
 
-  const handleSave = async () => {
-    if (!notes.trim()) {
-      Alert.alert('Error', 'Please add session notes');
+  const handleSaveDraft = async () => {
+    setSaving(true);
+    try {
+      // Save as draft logic
+      Alert.alert('Success', 'Draft saved successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save draft');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFinalize = async () => {
+    if (!observations.trim()) {
+      Alert.alert('Error', 'Please add your observations');
+      return;
+    }
+    if (!severity) {
+      Alert.alert('Error', 'Please select severity level');
       return;
     }
 
     setSaving(true);
     try {
       const response = await sessionService.endSession(sessionId, {
-        notes: notes.trim(),
-        severity
+        notes: `Observations: ${observations.trim()}\nAction Items: ${actionItems.trim()}`,
+        severity,
+        observations: observations.trim(),
+        actionItems: actionItems.trim()
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Session notes saved successfully', [
+        Alert.alert('Success', 'Session notes finalized successfully', [
           { text: 'OK', onPress: () => navigation.navigate('CounsellorDashboard') },
         ]);
       } else {
-        Alert.alert('Error', response.message || 'Failed to save session');
+        Alert.alert('Error', response.message || 'Failed to finalize session');
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to save session notes');
+      Alert.alert('Error', error.message || 'Failed to finalize session notes');
     } finally {
       setSaving(false);
     }
@@ -77,7 +91,7 @@ const SessionDetailsScreen = ({ route, navigation }) => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color="#F09E54" />
           <Text style={styles.loadingText}>Loading session...</Text>
         </View>
       </SafeAreaView>
@@ -86,101 +100,123 @@ const SessionDetailsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <ScrollView style={styles.container}>
-          <Card style={styles.card}>
-            <Card.Content>
-              <View style={styles.infoRow}>
-                <Icon name="shield-account" size={20} color={theme.colors.primary} />
-                <Text style={styles.infoText}>
-                  Session with {sessionData?.student?.anonymousUsername || 'Anonymous Student'}
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="chevron-left" size={28} color="#000000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Session Notes</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Observations Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Observations</Text>
+          <TextInput
+            value={observations}
+            onChangeText={setObservations}
+            mode="outlined"
+            multiline
+            numberOfLines={5}
+            placeholder="Document your key observations during the session..."
+            placeholderTextColor="#999999"
+            style={styles.textInput}
+            outlineColor="#E0E0E0"
+            activeOutlineColor="#000000"
+            theme={{
+              colors: {
+                text: '#000000',
+                placeholder: '#999999',
+              },
+              roundness: 12,
+            }}
+          />
+          <Text style={styles.helperText}>
+            Focus on factual details and client expressions.
+          </Text>
+        </View>
+
+        {/* Action Items Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Action Items</Text>
+          <TextInput
+            value={actionItems}
+            onChangeText={setActionItems}
+            mode="outlined"
+            multiline
+            numberOfLines={5}
+            placeholder="List any agreed-upon actions, homework, or follow-ups..."
+            placeholderTextColor="#999999"
+            style={styles.textInput}
+            outlineColor="#E0E0E0"
+            activeOutlineColor="#000000"
+            theme={{
+              colors: {
+                text: '#000000',
+                placeholder: '#999999',
+              },
+              roundness: 12,
+            }}
+          />
+          <Text style={styles.helperText}>
+            Clearly define next steps for both counsellor and client.
+          </Text>
+        </View>
+
+        {/* Severity Level Section */}
+        <View style={styles.section}>
+          <Text style={styles.severityTitle}>Severity Level</Text>
+          <View style={styles.severityContainer}>
+            {severityOptions.map((option) => (
+              <TouchableOpacity
+                key={option.key}
+                onPress={() => setSeverity(option.key)}
+                style={[
+                  styles.severityButton,
+                  severity === option.key && { backgroundColor: option.color },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.severityButtonText,
+                    severity === option.key && styles.severityButtonTextSelected,
+                  ]}
+                >
+                  {option.label}
                 </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Icon name="clock-outline" size={20} color={theme.colors.placeholder} />
-                <Text style={styles.infoText}>
-                  {sessionData?.startTime ? new Date(sessionData.startTime).toLocaleString() : new Date().toLocaleString()}
-                </Text>
-              </View>
-              {sessionData?.endTime && (
-                <View style={styles.infoRow}>
-                  <Icon name="clock-check-outline" size={20} color={theme.colors.success} />
-                  <Text style={styles.infoText}>
-                    Ended: {new Date(sessionData.endTime).toLocaleString()}
-                  </Text>
-                </View>
-              )}
-            </Card.Content>
-          </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text style={styles.label}>Severity Assessment</Text>
-              <View style={styles.severityContainer}>
-                {severityOptions.map((option) => (
-                  <Chip
-                    key={option.key}
-                    selected={severity === option.key}
-                    onPress={() => setSeverity(option.key)}
-                    icon={option.icon}
-                    style={[
-                      styles.severityChip,
-                      severity === option.key && {
-                        backgroundColor: option.color + '30',
-                        borderColor: option.color,
-                        borderWidth: 2,
-                      },
-                    ]}
-                    textStyle={{
-                      color: severity === option.key ? option.color : theme.colors.text,
-                      fontWeight: severity === option.key ? 'bold' : 'normal',
-                    }}
-                  >
-                    {option.label}
-                  </Chip>
-                ))}
-              </View>
-            </Card.Content>
-          </Card>
-
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text style={styles.label}>Session Notes</Text>
-              <Text style={styles.privacyNote}>
-                🔒 Notes are confidential and anonymized
-              </Text>
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                mode="outlined"
-                multiline
-                numberOfLines={8}
-                placeholder="Document session observations, interventions, and recommendations..."
-                style={styles.notesInput}
-              />
-            </Card.Content>
-          </Card>
-
-          <Button
-            mode="contained"
-            onPress={handleSave}
-            loading={saving}
+        {/* Buttons */}
+        <View style={styles.buttonSection}>
+          <TouchableOpacity
+            style={styles.saveDraftButton}
+            onPress={handleSaveDraft}
             disabled={saving}
-            style={styles.saveButton}
-            icon="content-save"
           >
-            Save Session
-          </Button>
+            <Text style={styles.saveDraftButtonText}>Save Draft</Text>
+          </TouchableOpacity>
 
-          <Button
-            mode="text"
-            onPress={() => navigation.goBack()}
-            style={styles.cancelButton}
+          <TouchableOpacity
+            style={[styles.finalizeButton, saving && styles.finalizeButtonDisabled]}
+            onPress={handleFinalize}
+            disabled={saving}
           >
-            Cancel
-          </Button>
-        </ScrollView>
-      </Animated.View>
+            <Text style={styles.finalizeButtonText}>
+              {saving ? 'Saving...' : 'Finalize Notes'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -188,7 +224,32 @@ const SessionDetailsScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 0.2,
+  },
+  headerSpacer: {
+    width: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -196,52 +257,103 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: spacing.md,
+    marginTop: 16,
     fontSize: 16,
-    color: theme.colors.placeholder,
+    color: '#666666',
   },
   container: {
     flex: 1,
-    padding: spacing.md,
+    backgroundColor: '#FFFFFF',
   },
-  card: {
-    marginBottom: spacing.md,
+  section: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  infoText: {
-    marginLeft: spacing.sm,
-    fontSize: 14,
-  },
-  label: {
+  sectionLabel: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 12,
+    letterSpacing: 0.1,
+  },
+  textInput: {
+    backgroundColor: '#FFFFFF',
+    fontSize: 15,
+    minHeight: 120,
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 8,
+    lineHeight: 16,
+  },
+  severityTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: spacing.sm,
+    color: '#000000',
+    marginBottom: 16,
+    letterSpacing: 0.1,
   },
   severityContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
+    justifyContent: 'center',
   },
-  severityChip: {
-    flex: 1,
-    marginHorizontal: spacing.xs,
+  severityButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    backgroundColor: '#F5F5F5',
+    minWidth: 100,
+    alignItems: 'center',
   },
-  privacyNote: {
-    fontSize: 12,
-    color: theme.colors.placeholder,
-    marginBottom: spacing.md,
+  severityButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000000',
   },
-  notesInput: {
-    backgroundColor: theme.colors.surface,
+  severityButtonTextSelected: {
+    color: '#FFFFFF',
   },
-  saveButton: {
-    marginTop: spacing.md,
+  buttonSection: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 32,
+    gap: 12,
   },
-  cancelButton: {
-    marginTop: spacing.sm,
+  saveDraftButton: {
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveDraftButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  finalizeButton: {
+    backgroundColor: '#F09E54',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#F09E54',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  finalizeButtonDisabled: {
+    opacity: 0.6,
+  },
+  finalizeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });
 

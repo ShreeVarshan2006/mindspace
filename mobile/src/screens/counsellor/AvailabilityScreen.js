@@ -1,35 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Animated, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, Button, Chip, Switch } from 'react-native-paper';
+import { Text, Switch } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Calendar } from 'react-native-calendars';
 import { spacing, theme } from '../../constants/theme';
 
-const AvailabilityScreen = () => {
-  const [selectedDay, setSelectedDay] = useState('Monday');
+const AvailabilityScreen = ({ navigation }) => {
+  const [selectedDate, setSelectedDate] = useState('2025-12-19');
+  const [recurringEnabled, setRecurringEnabled] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-
-  // Fixed time slots: 9 AM - 4 PM, 1-hour each, excluding 12-1 PM lunch
+  // Time slots for availability
   const timeSlots = [
-    '09:00 - 10:00',
-    '10:00 - 11:00',
-    '11:00 - 12:00',
-    // 12:00 - 13:00 is lunch break
-    '13:00 - 14:00',
-    '14:00 - 15:00',
-    '15:00 - 16:00',
+    { id: 1, time: '09:00 AM - 10:00 AM', selected: false },
+    { id: 2, time: '10:00 AM - 11:00 AM', selected: true },
+    { id: 3, time: '11:00 AM - 12:00 PM', selected: false, disabled: true },
+    { id: 4, time: '01:00 PM - 02:00 PM', selected: false },
+    { id: 5, time: '02:00 PM - 03:00 PM', selected: false },
+    { id: 6, time: '03:00 PM - 04:00 PM', selected: false, disabled: true },
+    { id: 7, time: '04:00 PM - 05:00 PM', selected: false },
   ];
 
-  // State to track enabled slots per day
-  const [availability, setAvailability] = useState({
-    Monday: {},
-    Tuesday: {},
-    Wednesday: {},
-    Thursday: {},
-    Friday: {},
-  });
+  const [availability, setAvailability] = useState(timeSlots);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -39,30 +32,21 @@ const AvailabilityScreen = () => {
     }).start();
   }, []);
 
-  const toggleSlot = (day, slot) => {
-    setAvailability(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        [slot]: !prev[day][slot]
-      }
-    }));
+  const toggleSlot = (slotId) => {
+    setAvailability(prev =>
+      prev.map(slot =>
+        slot.id === slotId && !slot.disabled
+          ? { ...slot, selected: !slot.selected }
+          : slot
+      )
+    );
   };
 
-  const getEnabledSlotsForDay = (day) => {
-    return Object.keys(availability[day] || {}).filter(slot => availability[day][slot]);
-  };
-
-  const handleSaveAvailability = () => {
-    // Count total enabled slots
-    let totalSlots = 0;
-    Object.keys(availability).forEach(day => {
-      totalSlots += getEnabledSlotsForDay(day).length;
-    });
-
+  const handleSaveChanges = () => {
+    const selectedSlots = availability.filter(slot => slot.selected);
     Alert.alert(
       'Success',
-      `Your availability has been saved!\n${totalSlots} slots enabled across the week.`,
+      `Your availability has been saved!\n${selectedSlots.length} slots enabled for ${selectedDate}.`,
       [{ text: 'OK' }]
     );
   };
@@ -70,109 +54,85 @@ const AvailabilityScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="chevron-left" size={28} color="#000000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Manage Availability</Text>
+          <View style={styles.headerRight} />
+        </View>
+
         <ScrollView style={styles.container}>
-          <Card style={styles.infoCard}>
-            <Card.Content>
-              <View style={styles.infoHeader}>
-                <Icon name="information" size={24} color={theme.colors.primary} />
-                <Text style={styles.infoTitle}>Slot Timings</Text>
-              </View>
-              <Text style={styles.infoText}>• 1-hour slots from 9 AM to 4 PM</Text>
-              <Text style={styles.infoText}>• Lunch break: 12 PM - 1 PM</Text>
-              <Text style={styles.infoText}>• Toggle slots on/off for each day</Text>
-            </Card.Content>
-          </Card>
+          {/* Calendar */}
+          <View style={styles.calendarContainer}>
+            <Calendar
+              current={selectedDate}
+              onDayPress={(day) => setSelectedDate(day.dateString)}
+              markedDates={{
+                [selectedDate]: {
+                  selected: true,
+                  selectedColor: '#F09E54',
+                },
+              }}
+              theme={{
+                selectedDayBackgroundColor: '#F09E54',
+                selectedDayTextColor: '#FFFFFF',
+                todayTextColor: '#F09E54',
+                arrowColor: '#000000',
+                monthTextColor: '#000000',
+                textMonthFontSize: 18,
+                textMonthFontWeight: 'bold',
+                textDayFontSize: 14,
+                textDayHeaderFontSize: 12,
+              }}
+            />
+          </View>
 
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text style={styles.title}>Select Day</Text>
-              <View style={styles.daysContainer}>
-                {days.map((day) => (
-                  <Chip
-                    key={day}
-                    selected={selectedDay === day}
-                    onPress={() => setSelectedDay(day)}
-                    style={styles.dayChip}
-                    mode={selectedDay === day ? 'flat' : 'outlined'}
-                  >
-                    {day}
-                  </Chip>
-                ))}
-              </View>
+          {/* Available Slots */}
+          <Text style={styles.sectionTitle}>Available Slots</Text>
+          <View style={styles.slotsGrid}>
+            {availability.map((slot) => (
+              <TouchableOpacity
+                key={slot.id}
+                style={[
+                  styles.slotButton,
+                  slot.selected && styles.slotButtonSelected,
+                  slot.disabled && styles.slotButtonDisabled,
+                ]}
+                onPress={() => toggleSlot(slot.id)}
+                disabled={slot.disabled}
+              >
+                <Text
+                  style={[
+                    styles.slotText,
+                    slot.selected && styles.slotTextSelected,
+                    slot.disabled && styles.slotTextDisabled,
+                  ]}
+                >
+                  {slot.time}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-              <Text style={styles.label}>Available Time Slots</Text>
-              {timeSlots.map((slot) => (
-                <Card key={slot} style={styles.slotCard}>
-                  <Card.Content style={styles.slotContent}>
-                    <View style={styles.slotInfo}>
-                      <Icon
-                        name="clock-outline"
-                        size={20}
-                        color={availability[selectedDay]?.[slot] ? theme.colors.primary : theme.colors.disabled}
-                      />
-                      <Text style={[
-                        styles.slotTime,
-                        availability[selectedDay]?.[slot] && styles.slotTimeActive
-                      ]}>
-                        {slot}
-                      </Text>
-                    </View>
-                    <Switch
-                      value={availability[selectedDay]?.[slot] || false}
-                      onValueChange={() => toggleSlot(selectedDay, slot)}
-                      color={theme.colors.primary}
-                    />
-                  </Card.Content>
-                </Card>
-              ))}
+          {/* Recurring Availability */}
+          <View style={styles.recurringSection}>
+            <View style={styles.recurringTextContainer}>
+              <Text style={styles.recurringTitle}>Recurring Availability</Text>
+              <Text style={styles.recurringSubtitle}>Apply these slots to all future weeks.</Text>
+            </View>
+            <Switch
+              value={recurringEnabled}
+              onValueChange={setRecurringEnabled}
+              trackColor={{ false: '#D1D1D1', true: '#F09E54' }}
+              thumbColor={recurringEnabled ? '#FFFFFF' : '#FFFFFF'}
+            />
+          </View>
 
-              <Card style={styles.lunchCard}>
-                <Card.Content style={styles.lunchContent}>
-                  <Icon name="food" size={24} color="#FF9800" />
-                  <View style={styles.lunchText}>
-                    <Text style={styles.lunchTitle}>Lunch Break</Text>
-                    <Text style={styles.lunchTime}>12:00 - 13:00</Text>
-                  </View>
-                </Card.Content>
-              </Card>
-            </Card.Content>
-          </Card>
-
-          <Button
-            mode="contained"
-            onPress={handleSaveAvailability}
-            style={styles.saveButton}
-            icon="check"
-            contentStyle={styles.buttonContent}
-          >
-            Save Availability
-          </Button>
-
-          <Text style={styles.sectionTitle}>Weekly Summary</Text>
-          {days.map(day => {
-            const enabledSlots = getEnabledSlotsForDay(day);
-            return (
-              <Card key={day} style={styles.summaryCard}>
-                <Card.Content style={styles.summaryContent}>
-                  <View style={styles.summaryHeader}>
-                    <Text style={styles.summaryDay}>{day}</Text>
-                    <Chip mode="outlined" compact>
-                      {enabledSlots.length} slots
-                    </Chip>
-                  </View>
-                  {enabledSlots.length > 0 && (
-                    <View style={styles.summarySlots}>
-                      {enabledSlots.map(slot => (
-                        <Chip key={slot} style={styles.summaryChip} compact>
-                          {slot}
-                        </Chip>
-                      ))}
-                    </View>
-                  )}
-                </Card.Content>
-              </Card>
-            );
-          })}
+          {/* Save Button */}
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          </TouchableOpacity>
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
@@ -182,144 +142,122 @@ const AvailabilityScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerRight: {
+    width: 40,
   },
   container: {
     flex: 1,
-    padding: spacing.md,
+    backgroundColor: '#FFFFFF',
   },
-  infoCard: {
-    marginBottom: spacing.md,
-    backgroundColor: theme.colors.primaryContainer,
-  },
-  infoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: spacing.sm,
-  },
-  infoText: {
-    fontSize: 14,
-    color: theme.colors.text,
-    marginVertical: 2,
-  },
-  card: {
-    marginBottom: spacing.lg,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
-  },
-  daysContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-    justifyContent: 'center',
-  },
-  dayChip: {
-    marginRight: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  slotCard: {
-    marginBottom: spacing.sm,
-    backgroundColor: theme.colors.surface,
-  },
-  slotContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-  },
-  slotInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  slotTime: {
-    fontSize: 14,
-    color: theme.colors.text,
-    marginLeft: spacing.md,
-    fontFamily: 'monospace',
-  },
-  slotTimeActive: {
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-  },
-  lunchCard: {
-    marginTop: spacing.md,
-    backgroundColor: '#FFF3E0',
-  },
-  lunchContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  lunchText: {
-    marginLeft: spacing.md,
-  },
-  lunchTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FF9800',
-  },
-  lunchTime: {
-    fontSize: 12,
-    color: '#666',
-    fontFamily: 'monospace',
-  },
-  saveButton: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  buttonContent: {
-    paddingVertical: spacing.xs,
-    justifyContent: 'center',
-    alignItems: 'center',
+  calendarContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: spacing.md,
-    marginLeft: spacing.md,
+    color: '#000000',
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 16,
   },
-  summaryCard: {
-    marginBottom: spacing.sm,
-  },
-  summaryContent: {
-    paddingVertical: spacing.sm,
-  },
-  summaryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  summaryDay: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  summarySlots: {
+  slotsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
+    paddingHorizontal: 20,
+    gap: 12,
   },
-  summaryChip: {
-    marginRight: spacing.xs,
-    marginBottom: spacing.xs,
+  slotButton: {
+    width: '47%',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slotButtonSelected: {
+    backgroundColor: '#F09E54',
+  },
+  slotButtonDisabled: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  slotText: {
+    fontSize: 14,
+    color: '#000000',
+    fontWeight: '500',
+  },
+  slotTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  slotTextDisabled: {
+    color: '#CCCCCC',
+  },
+  recurringSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    marginTop: 20,
+  },
+  recurringTextContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
+  recurringTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  recurringSubtitle: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  saveButton: {
+    backgroundColor: '#F09E54',
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 40,
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 

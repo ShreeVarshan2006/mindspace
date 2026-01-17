@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, Chip, Divider, ActivityIndicator, FAB } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchMyAppointments } from '../../redux/slices/appointmentSlice';
@@ -24,57 +24,66 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'confirmed':
       case 'scheduled':
-        return theme.colors.primary;
+        return '#5CB85C'; // Green for confirmed
+      case 'pending':
+        return '#D9534F'; // Red for pending
       case 'completed':
-        return theme.colors.success;
+        return '#5CB85C';
       case 'cancelled':
-        return theme.colors.error;
+        return '#D9534F';
       default:
-        return theme.colors.disabled;
+        return '#999999';
     }
   };
 
-  const renderAppointment = ({ item }) => (
-    <Card style={styles.card}>
-      <Card.Content>
-        <View style={styles.header}>
+  const getStatusLabel = (status) => {
+    if (status === 'scheduled') return 'Confirmed';
+    if (status === 'pending') return 'Pending';
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  const renderAppointment = ({ item }) => {
+    const statusColor = getStatusColor(item.status);
+    const statusLabel = getStatusLabel(item.status);
+    const appointmentDate = new Date(item.appointmentDate || item.date);
+    const dateLabel = appointmentDate.toDateString() === new Date().toDateString()
+      ? 'Today'
+      : appointmentDate.toDateString() === new Date(Date.now() + 86400000).toDateString()
+        ? 'Tomorrow'
+        : appointmentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Avatar.Image
+            size={48}
+            source={{ uri: item.student?.avatar || 'https://via.placeholder.com/48' }}
+            style={styles.avatar}
+          />
           <View style={styles.headerInfo}>
-            <Text style={styles.studentName}>
-              {item.student?.anonymousUsername || 'Anonymous Student'}
+            <Text style={styles.studentId}>
+              Student ID: {item.student?.studentId || item.student?.anonymousUsername || '#CW876'}
             </Text>
-            <Text style={styles.type}>{item.type} session</Text>
           </View>
-          <Chip
-            mode="flat"
-            style={{ backgroundColor: getStatusColor(item.status) + '20' }}
-            textStyle={{ color: getStatusColor(item.status) }}
-          >
-            {item.status}
-          </Chip>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+            <Text style={styles.statusText}>{statusLabel}</Text>
+          </View>
         </View>
 
-        <Divider style={styles.divider} />
+        <Text style={styles.dateText}>Date: {dateLabel}, {appointmentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
+        <Text style={styles.timeText}>Time: {item.time || '10:00 AM - 11:00 AM'}</Text>
 
-        <View style={styles.detailsRow}>
-          <Icon name="calendar" size={16} color={theme.colors.placeholder} />
-          <Text style={styles.detailText}>{new Date(item.date).toLocaleDateString()}</Text>
-        </View>
-
-        <View style={styles.detailsRow}>
-          <Icon name="clock-outline" size={16} color={theme.colors.placeholder} />
-          <Text style={styles.detailText}>{item.time}</Text>
-        </View>
-
-        <View style={styles.detailsRow}>
-          <Icon name="text" size={16} color={theme.colors.placeholder} />
-          <Text style={styles.detailText} numberOfLines={2}>
-            {item.reason}
-          </Text>
-        </View>
-      </Card.Content>
-    </Card>
-  );
+        <TouchableOpacity
+          style={styles.startButton}
+          onPress={() => navigation.navigate('SessionDetails', { appointmentId: item._id })}
+        >
+          <Text style={styles.startButtonText}>Start Session</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   if (isLoading && !refreshing) {
     return (
@@ -89,6 +98,14 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="chevron-left" size={28} color="#000000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>My Appointments</Text>
+          <View style={styles.headerRight} />
+        </View>
+
         <FlatList
           data={appointments || []}
           renderItem={renderAppointment}
@@ -97,16 +114,10 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Icon name="calendar-blank" size={64} color={theme.colors.disabled} />
+              <Icon name="calendar-blank" size={64} color="#CCCCCC" />
               <Text style={styles.emptyText}>No appointments</Text>
             </View>
           }
-        />
-        <FAB
-          style={styles.fab}
-          icon="qrcode-scan"
-          label="Scan QR"
-          onPress={() => navigation.navigate('QRScanner')}
         />
       </View>
     </SafeAreaView>
@@ -116,10 +127,36 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerRight: {
+    width: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -127,59 +164,75 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   list: {
-    padding: spacing.md,
+    padding: 20,
   },
   card: {
-    marginBottom: spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  header: {
+  cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.sm,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatar: {
+    marginRight: 12,
   },
   headerInfo: {
     flex: 1,
   },
-  studentName: {
-    fontSize: 18,
+  studentId: {
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#000000',
   },
-  type: {
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  dateText: {
     fontSize: 14,
-    color: theme.colors.primary,
-    marginTop: 2,
-    textTransform: 'capitalize',
+    color: '#666666',
+    marginBottom: 4,
   },
-  divider: {
-    marginVertical: spacing.md,
+  timeText: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 16,
   },
-  detailsRow: {
-    flexDirection: 'row',
+  startButton: {
+    backgroundColor: '#F09E54',
+    borderRadius: 8,
+    paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    justifyContent: 'center',
   },
-  detailText: {
-    marginLeft: spacing.sm,
-    fontSize: 14,
-    color: theme.colors.text,
-    flex: 1,
+  startButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   emptyContainer: {
     alignItems: 'center',
-    marginTop: spacing.xl * 2,
+    marginTop: 80,
   },
   emptyText: {
     fontSize: 16,
-    color: theme.colors.disabled,
-    marginTop: spacing.md,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: theme.colors.primary,
+    color: '#CCCCCC',
+    marginTop: 16,
   },
 });
 

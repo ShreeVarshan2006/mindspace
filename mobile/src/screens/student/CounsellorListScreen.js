@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, Card, Chip, Avatar, ActivityIndicator, Searchbar } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchCounsellors } from '../../redux/slices/appointmentSlice';
@@ -10,94 +10,45 @@ import { spacing, theme } from '../../constants/theme';
 const CounsellorListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { counsellors = [], isLoading } = useSelector((state) => state.appointments || {});
-  const [searchQuery, setSearchQuery] = React.useState('');
 
   useEffect(() => {
     dispatch(fetchCounsellors());
   }, [dispatch]);
 
-  const filteredCounsellors = counsellors.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.specialization?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const renderCounsellor = ({ item }) => {
+    const isAvailable = !item.isActive && item.availableSlots > 0;
 
-  const renderCounsellor = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('BookAppointment', { counsellor: item })}
-    >
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Avatar.Icon
-              size={60}
-              icon="account"
-              style={{ backgroundColor: theme.colors.primary }}
-            />
-            <View style={styles.counsellorInfo}>
-              <Text style={styles.counsellorName}>{item.name}</Text>
-              {item.designation && (
-                <View style={styles.infoRow}>
-                  <Icon name="briefcase-outline" size={14} color={theme.colors.placeholder} />
-                  <Text style={styles.infoText}>{item.designation}</Text>
-                </View>
-              )}
-              {item.specialization && (
-                <View style={styles.infoRow}>
-                  <Icon name="star" size={14} color={theme.colors.placeholder} />
-                  <Text style={styles.infoText}>{item.specialization}</Text>
-                </View>
-              )}
-              {item.experience && (
-                <View style={styles.infoRow}>
-                  <Icon name="clock-outline" size={14} color={theme.colors.placeholder} />
-                  <Text style={styles.infoText}>{item.experience}</Text>
-                </View>
-              )}
-            </View>
+    return (
+      <TouchableOpacity
+        style={styles.counsellorCard}
+        onPress={() => navigation.navigate('BookAppointment', { counsellor: item })}
+      >        <Avatar.Image
+          size={56}
+          source={{ uri: item.avatar || 'https://via.placeholder.com/56' }}
+          style={styles.avatar}
+        />
+        <View style={styles.counsellorInfo}>
+          <Text style={styles.counsellorName}>{item.name}</Text>
+          <Text style={styles.specialization}>{item.specialization || 'Counselling'}</Text>
+          <Text style={styles.availability}>
+            {isAvailable ? 'Available' : 'Unavailable'}
+          </Text>
+          <View style={[styles.statusBadge, isAvailable ? styles.activeBadge : styles.inactiveBadge]}>
+            <Text style={styles.statusText}>
+              {isAvailable ? 'Active' : 'Inactive'}
+            </Text>
           </View>
-
-          {item.location && (
-            <View style={styles.locationRow}>
-              <Icon name="map-marker" size={16} color={theme.colors.primary} />
-              <Text style={styles.locationText}>{item.location}</Text>
-            </View>
-          )}
-
-          <View style={styles.footer}>
-            <Chip
-              icon="circle"
-              mode="flat"
-              textStyle={{
-                color: item.isActive ? '#FF9800' : '#4CAF50',
-                fontSize: 12
-              }}
-              style={{
-                backgroundColor: item.isActive ? '#FF980020' : '#4CAF5020',
-                marginRight: spacing.sm
-              }}
-              compact
-            >
-              {item.isActive ? 'In Session' : 'Available'}
-            </Chip>
-            <Chip
-              icon="calendar"
-              mode="outlined"
-              style={styles.chip}
-              compact
-            >
-              {item.availableSlots || 0} slots
-            </Chip>
-          </View>
-        </Card.Content>
-      </Card>
-    </TouchableOpacity>
-  );
+        </View>
+        <Icon name="chevron-right" size={24} color="#CCCCCC" />
+      </TouchableOpacity>
+    );
+  };
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color="#F09E54" />
         </View>
       </SafeAreaView>
     );
@@ -105,26 +56,33 @@ const CounsellorListScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
-        <Searchbar
-          placeholder="Search counsellors"
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchbar}
-        />
-        <FlatList
-          data={filteredCounsellors}
-          renderItem={renderCounsellor}
-          keyExtractor={(item) => item._id}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Icon name="account-search" size={64} color={theme.colors.disabled} />
-              <Text style={styles.emptyText}>No counsellors found</Text>
-            </View>
-          }
-        />
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="chevron-left" size={28} color="#000000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Counsellors</Text>
+        <TouchableOpacity style={styles.filterButton}>
+          <Icon name="tune" size={24} color="#000000" />
+        </TouchableOpacity>
       </View>
+
+      <FlatList
+        data={counsellors}
+        renderItem={renderCounsellor}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Icon name="account-search" size={64} color="#CCCCCC" />
+            <Text style={styles.emptyText}>No counsellors found</Text>
+          </View>
+        }
+      />
     </SafeAreaView>
   );
 };
@@ -132,89 +90,103 @@ const CounsellorListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
   },
-  container: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 0.2,
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  searchbar: {
-    margin: spacing.md,
-  },
   list: {
-    padding: spacing.md,
-    paddingTop: 0,
+    paddingVertical: 8,
   },
-  card: {
-    marginBottom: spacing.md,
-  },
-  cardHeader: {
+  counsellorCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  avatar: {
+    marginRight: 16,
   },
   counsellorInfo: {
     flex: 1,
-    marginLeft: spacing.md,
   },
   counsellorName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+    letterSpacing: 0.1,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-    gap: 4,
-  },
-  infoText: {
-    fontSize: 13,
-    color: theme.colors.text,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.primaryContainer,
-    padding: spacing.sm,
-    borderRadius: 8,
-    marginBottom: spacing.md,
-    gap: spacing.xs,
-  },
-  locationText: {
-    fontSize: 13,
-    color: theme.colors.primary,
-    fontWeight: '500',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    marginLeft: 4,
+  specialization: {
     fontSize: 14,
-    fontWeight: 'bold',
+    color: '#666666',
+    marginBottom: 4,
+    lineHeight: 18,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  availability: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 8,
   },
-  chip: {
-    backgroundColor: theme.colors.surface,
+  statusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  activeBadge: {
+    backgroundColor: '#5CB85C',
+  },
+  inactiveBadge: {
+    backgroundColor: '#D9534F',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
   emptyContainer: {
     alignItems: 'center',
-    marginTop: spacing.xl * 2,
+    marginTop: 80,
   },
   emptyText: {
     fontSize: 16,
-    color: theme.colors.disabled,
-    marginTop: spacing.md,
+    color: '#CCCCCC',
+    marginTop: 16,
   },
 });
 

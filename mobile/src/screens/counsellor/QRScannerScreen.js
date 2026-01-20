@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import { startSession as startSessionAction } from '../../redux/slices/sessionSlice';
 import { spacing, theme } from '../../constants/theme';
 import { sessionService } from '../../services/sessionService';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -19,6 +20,7 @@ const QRScannerScreen = ({ route, navigation }) => {
   const [scanMode, setScanMode] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
+  const { colors } = useTheme();
 
   const handleStartSession = async (qrData = null) => {
     const codeToUse = qrData || studentCode.trim();

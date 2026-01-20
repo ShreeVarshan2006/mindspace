@@ -68,13 +68,24 @@ const moodSlice = createSlice({
       })
       // Log mood
       .addCase(logMood.fulfilled, (state, action) => {
+        const newMood = action.payload;
+        // Normalize the createdAt field
+        if (!newMood.createdAt && newMood.created_at) {
+          newMood.createdAt = newMood.created_at;
+        }
+        // Check if mood already exists for this date
+        const dateToCompare = newMood.date || newMood.createdAt;
         const index = state.moods.findIndex(
-          m => new Date(m.date).toDateString() === new Date(action.payload.date).toDateString()
+          m => {
+            const mDate = m.date || m.createdAt;
+            return mDate && dateToCompare &&
+              new Date(mDate).toDateString() === new Date(dateToCompare).toDateString();
+          }
         );
         if (index !== -1) {
-          state.moods[index] = action.payload;
+          state.moods[index] = newMood;
         } else {
-          state.moods.unshift(action.payload);
+          state.moods.unshift(newMood);
         }
       })
       // Fetch month moods

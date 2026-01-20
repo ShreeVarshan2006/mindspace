@@ -4,17 +4,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useFocusEffect } from '@react-navigation/native';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
 import { spacing } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const SessionHistoryScreen = ({ navigation }) => {
     const dispatch = useDispatch();
     const { sessions = [], isLoading } = useSelector((state) => state.sessions || {});
     const [refreshing, setRefreshing] = React.useState(false);
+    const { colors } = useTheme();
 
     useEffect(() => {
         loadSessions();
     }, []);
+
+    // Reload sessions when screen comes into focus (e.g., after saving notes)
+    useFocusEffect(
+        React.useCallback(() => {
+            loadSessions();
+        }, [])
+    );
 
     const loadSessions = async () => {
         try {
@@ -72,7 +82,7 @@ const SessionHistoryScreen = ({ navigation }) => {
 
     if (isLoading && !sessions?.length) {
         return (
-            <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#F5A962" />
                 </View>
@@ -81,21 +91,21 @@ const SessionHistoryScreen = ({ navigation }) => {
     }
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
             <ScrollView
-                style={styles.container}
+                style={[styles.container, { backgroundColor: colors.background }]}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#F5A962']} />
                 }
             >
                 {/* Header */}
-                <View style={styles.header}>
+                <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Icon name="chevron-left" size={28} color="#000000" />
+                        <Icon name="chevron-left" size={28} color={colors.text} />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Session History</Text>
+                    <Text style={[styles.headerTitle, { color: colors.text }]}>Session History</Text>
                     <TouchableOpacity style={styles.filterButton}>
-                        <Icon name="tune" size={24} color="#000000" />
+                        <Icon name="tune" size={24} color={colors.text} />
                     </TouchableOpacity>
                 </View>
 

@@ -114,7 +114,7 @@ const SeverityAnalyticsScreen = ({ navigation }) => {
           >
             <Text style={styles.filterLabel}>Year of Study: </Text>
             <Text style={styles.filterValue}>{selectedYear}</Text>
-            <Icon name="chevron-down" size={20} color="#666666" />
+            <Icon name="chevron-down" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
           {/* Department Filter */}
@@ -124,7 +124,7 @@ const SeverityAnalyticsScreen = ({ navigation }) => {
           >
             <Text style={styles.filterLabel}>Dept: </Text>
             <Text style={styles.filterValue}>{selectedDepartment === 'All' ? 'All' : selectedDepartment.substring(0, 6)}</Text>
-            <Icon name="chevron-down" size={20} color="#666666" />
+            <Icon name="chevron-down" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -136,7 +136,7 @@ const SeverityAnalyticsScreen = ({ navigation }) => {
           >
             <Text style={styles.filterLabel}>Month: </Text>
             <Text style={styles.filterValue}>{selectedMonth === 'All' ? 'All' : selectedMonth.substring(0, 3)}</Text>
-            <Icon name="chevron-down" size={20} color="#666666" />
+            <Icon name="chevron-down" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -145,7 +145,7 @@ const SeverityAnalyticsScreen = ({ navigation }) => {
           >
             <Text style={styles.filterLabel}>Calendar Year: </Text>
             <Text style={styles.filterValue}>{selectedCalendarYear}</Text>
-            <Icon name="chevron-down" size={20} color="#666666" />
+            <Icon name="chevron-down" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -159,7 +159,7 @@ const SeverityAnalyticsScreen = ({ navigation }) => {
             <Text style={styles.severityFilterText}>
               {selectedSeverity === 'All' ? 'All Severities' : selectedSeverity}
             </Text>
-            <Icon name="chevron-down" size={20} color="#666666" />
+            <Icon name="chevron-down" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 

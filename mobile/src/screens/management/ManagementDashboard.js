@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -77,10 +77,12 @@ const ManagementDashboard = ({ navigation }) => {
       >
         {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-          <View style={styles.iconCircle}>
-            <Icon name="brain" size={28} color="#FFFFFF" />
-          </View>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Welcome Management</Text>
+          <Image
+            source={require('../../../assets/images/brain-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Management</Text>
           <TouchableOpacity
             style={styles.darkModeButton}
             onPress={toggleDarkMode}
@@ -123,7 +125,7 @@ const ManagementDashboard = ({ navigation }) => {
           {counsellorSessions.map((counsellor, index) => (
             <View key={index} style={styles.counsellorRow}>
               <Text style={[styles.counsellorName, { color: colors.text }]}>{counsellor.name}</Text>
-              <View style={[styles.barContainer, { backgroundColor: colors.secondary }]}>
+              <View style={[styles.barContainer, { backgroundColor: colors.text === '#FFFFFF' ? '#3A3A3A' : '#FFE8D6' }]}>
                 <View
                   style={[
                     styles.bar,
@@ -161,11 +163,9 @@ const ManagementDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -173,25 +173,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
-  iconCircle: {
+  logo: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: '#5B9BD5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000000',
     letterSpacing: 0.15,
     flex: 1,
+    marginLeft: spacing.md,
   },
   darkModeButton: {
     width: 40,
@@ -208,14 +201,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFF4EC',
     borderRadius: 12,
     padding: spacing.md,
     minHeight: 120,
   },
   statLabel: {
     fontSize: 14,
-    color: '#666666',
     marginBottom: spacing.xs,
     fontWeight: '400',
     letterSpacing: 0.25,
@@ -240,7 +231,6 @@ const styles = StyleSheet.create({
   },
   statSubtext: {
     fontSize: 12,
-    color: '#999999',
     marginTop: 2,
     fontWeight: '400',
   },
@@ -251,7 +241,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000000',
     marginBottom: spacing.md,
     letterSpacing: 0.15,
   },
@@ -262,14 +251,12 @@ const styles = StyleSheet.create({
   },
   counsellorName: {
     fontSize: 16,
-    color: '#000000',
     width: 140,
     fontWeight: '400',
   },
   barContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: '#FFE8D6',
     borderRadius: 4,
     marginHorizontal: spacing.sm,
     overflow: 'hidden',
@@ -282,7 +269,6 @@ const styles = StyleSheet.create({
   counsellorCount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
     width: 32,
     textAlign: 'right',
   },

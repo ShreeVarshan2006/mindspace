@@ -6,11 +6,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchMyAppointments } from '../../redux/slices/appointmentSlice';
 import { spacing, theme } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const CounsellorAppointmentsScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { appointments = [], isLoading } = useSelector((state) => state.appointments || {});
   const [refreshing, setRefreshing] = React.useState(false);
+  const { colors } = useTheme();
 
   useEffect(() => {
     dispatch(fetchMyAppointments());
@@ -55,7 +57,7 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
         : appointmentDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
         <View style={styles.cardHeader}>
           <Avatar.Image
             size={56}
@@ -63,8 +65,8 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
             style={styles.avatar}
           />
           <View style={styles.headerInfo}>
-            <Text style={styles.studentLabel}>Student ID:</Text>
-            <Text style={styles.studentId}>
+            <Text style={[styles.studentLabel, { color: colors.text + '80' }]}>Student ID:</Text>
+            <Text style={[styles.studentId, { color: colors.text }]}>
               {item.student?.studentId || item.student?.anonymousUsername || '#CW876'}
             </Text>
           </View>
@@ -73,10 +75,10 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-        <Text style={styles.infoText}>Date: {dateLabel}, {appointmentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
-        <Text style={styles.infoText}>Time: {item.time || '10:00 AM - 11:00 AM'}</Text>
+        <Text style={[styles.infoText, { color: colors.text }]}>Date: {dateLabel}, {appointmentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
+        <Text style={[styles.infoText, { color: colors.text }]}>Time: {item.time || '10:00 AM - 11:00 AM'}</Text>
 
         <TouchableOpacity
           style={styles.startButton}
@@ -99,13 +101,13 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
-        <View style={styles.header}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="chevron-left" size={28} color="#000000" />
+            <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Appointments</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>My Appointments</Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -118,7 +120,7 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Icon name="calendar-blank" size={64} color="#CCCCCC" />
-              <Text style={styles.emptyText}>No appointments</Text>
+              <Text style={[styles.emptyText, { color: colors.text + '80' }]}>No appointments</Text>
             </View>
           }
         />
@@ -130,7 +132,6 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -141,9 +142,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
   backButton: {
     width: 40,
@@ -154,7 +153,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
     flex: 1,
     textAlign: 'center',
   },
@@ -170,7 +168,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,

@@ -109,14 +109,14 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
             onPress={() => setShowYearModal(true)}
           >
             <Text style={styles.filterText}>Year of Study: {selectedYear}</Text>
-            <Icon name="chevron-down" size={16} color="#666666" />
+            <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterPill}
             onPress={() => setShowDepartmentModal(true)}
           >
             <Text style={styles.filterText}>Department: {selectedDepartment === 'All' ? 'All' : selectedDepartment}</Text>
-            <Icon name="chevron-down" size={16} color="#666666" />
+            <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -127,14 +127,14 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
             onPress={() => setShowMonthModal(true)}
           >
             <Text style={styles.filterText}>Month: {selectedMonth}</Text>
-            <Icon name="chevron-down" size={16} color="#666666" />
+            <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterPill}
             onPress={() => setShowCalendarYearModal(true)}
           >
             <Text style={styles.filterText}>Calendar Year: {selectedCalendarYear}</Text>
-            <Icon name="chevron-down" size={16} color="#666666" />
+            <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 

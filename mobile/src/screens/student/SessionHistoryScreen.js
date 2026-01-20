@@ -5,9 +5,11 @@ import { ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
+import { useTheme } from '../../context/ThemeContext';
 
 const SessionHistoryScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { sessions = [], isLoading } = useSelector((state) => state.sessions || {});
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState(null);
@@ -56,7 +58,7 @@ const SessionHistoryScreen = ({ navigation }) => {
 
   if (isLoading && (!sessions || sessions.length === 0)) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#F5A962" />
         </View>
@@ -65,17 +67,17 @@ const SessionHistoryScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         style={styles.container}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="chevron-left" size={28} color="#000000" />
+            <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Session History</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Session History</Text>
           <View style={{ width: 28 }} />
         </View>
 
@@ -83,54 +85,38 @@ const SessionHistoryScreen = ({ navigation }) => {
         {error ? (
           <View style={styles.emptyState}>
             <Icon name="alert-circle" size={64} color="#FF6B6B" />
-            <Text style={styles.emptyText}>{error}</Text>
-            <Text style={styles.emptySubtext}>Pull down to retry</Text>
+            <Text style={[styles.emptyText, { color: colors.text }]}>{error}</Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Pull down to retry</Text>
           </View>
         ) : (!sessions || sessions.length === 0) ? (
           <View style={styles.emptyState}>
-            <Icon name="history" size={64} color="#CCCCCC" />
-            <Text style={styles.emptyText}>No session history</Text>
-            <Text style={styles.emptySubtext}>
+            <Icon name="history" size={64} color={colors.textSecondary} />
+            <Text style={[styles.emptyText, { color: colors.text }]}>No session history</Text>
+            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
               Your counselling session history will appear here
             </Text>
           </View>
         ) : (
           Object.entries(groupedSessions).map(([date, dateSessions]) => (
-            <View key={date} style={styles.dateGroup}>
-              {/* Date Header */}
+            <View key={date} style={styles.dateSection}>
               <View style={styles.dateHeader}>
-                <Icon name="calendar-blank" size={20} color="#666666" style={styles.dateIcon} />
-                <Text style={styles.dateText}>{date}</Text>
+                <Icon name="calendar" size={20} color={colors.textSecondary} style={styles.dateIcon} />
+                <Text style={[styles.dateText, { color: colors.text }]}>{date}</Text>
               </View>
-
-              {/* Sessions for this date */}
-              {dateSessions.map((session, index) => (
-                <TouchableOpacity
-                  key={session._id || `session-${index}`}
-                  style={styles.sessionCard}
-                  onPress={() => {
-                    if (session._id && navigation.navigate) {
-                      try {
-                        navigation.navigate('SessionDetails', { sessionId: session._id });
-                      } catch (err) {
-                        console.log('Navigation not available');
-                      }
-                    }
-                  }}
-                >
+              {dateSessions.map((session) => (
+                <View key={session._id} style={[styles.sessionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <View style={styles.avatar}>
-                    <Icon name="account" size={28} color="#999999" />
+                    <Icon name="account" size={24} color={colors.textSecondary} />
                   </View>
                   <View style={styles.sessionInfo}>
-                    <Text style={styles.counsellorName}>
-                      {session?.counsellor?.name || session?.counsellorName || 'Counsellor'}
+                    <Text style={[styles.counsellorName, { color: colors.text }]}>
+                      {session.counsellor?.name || 'Counsellor'}
                     </Text>
-                    <Text style={styles.sessionType}>
-                      {session?.type || 'Session'}
+                    <Text style={[styles.sessionType, { color: colors.textSecondary }]}>
+                      {session.type || 'Session'} • {session.duration || '30'} mins
                     </Text>
                   </View>
-                  <Icon name="chevron-right" size={24} color="#CCCCCC" />
-                </TouchableOpacity>
+                </View>
               ))}
             </View>
           ))
@@ -138,7 +124,7 @@ const SessionHistoryScreen = ({ navigation }) => {
 
         <View style={{ height: 80 }} />
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
@@ -184,18 +170,15 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
     letterSpacing: 0.3,
   },
   sessionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     padding: 15,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   avatar: {
     width: 48,
@@ -212,14 +195,12 @@ const styles = StyleSheet.create({
   counsellorName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
     marginBottom: 4,
     letterSpacing: 0.2,
   },
   sessionType: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#666666',
     letterSpacing: 0.2,
   },
   emptyState: {
@@ -230,14 +211,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#999999',
     marginTop: 15,
     letterSpacing: 0.2,
   },
   emptySubtext: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#CCCCCC',
     marginTop: 8,
     textAlign: 'center',
     letterSpacing: 0.2,

@@ -5,11 +5,13 @@ import { Text, Switch } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Calendar } from 'react-native-calendars';
 import { spacing, theme } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const AvailabilityScreen = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState('2025-12-19');
   const [recurringEnabled, setRecurringEnabled] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
 
   // Time slots for availability
   const timeSlots = [
@@ -52,17 +54,17 @@ const AvailabilityScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="chevron-left" size={28} color="#000000" />
+            <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Manage Availability</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Manage Availability</Text>
           <View style={styles.headerRight} />
         </View>
 
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
           {/* Calendar */}
           <View style={styles.calendarContainer}>
             <Calendar

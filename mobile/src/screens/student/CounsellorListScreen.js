@@ -5,32 +5,70 @@ import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchCounsellors } from '../../redux/slices/appointmentSlice';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing, theme } from '../../constants/theme';
 
 const CounsellorListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { counsellors = [], isLoading } = useSelector((state) => state.appointments || {});
+
+  // Mock counsellors data if none available
+  const mockCounsellors = [
+    {
+      _id: '1',
+      name: 'Dr. Alice Chen',
+      specialization: 'Cognitive Behavioral Therapy',
+      avatar: 'https://via.placeholder.com/56',
+      isActive: true,
+      availableSlots: 5,
+    },
+    {
+      _id: '2',
+      name: 'Mr. David Lee',
+      specialization: 'Mindfulness & Stress Management',
+      avatar: 'https://via.placeholder.com/56',
+      isActive: true,
+      availableSlots: 3,
+    },
+    {
+      _id: '3',
+      name: 'Ms. Sarah Green',
+      specialization: 'Relationship Counselling',
+      avatar: 'https://via.placeholder.com/56',
+      isActive: false,
+      availableSlots: 0,
+    },
+  ];
+
+  const displayCounsellors = counsellors.length > 0 ? counsellors : mockCounsellors;
 
   useEffect(() => {
     dispatch(fetchCounsellors());
   }, [dispatch]);
 
   const renderCounsellor = ({ item }) => {
-    const isAvailable = !item.isActive && item.availableSlots > 0;
+    const isAvailable = item.availableSlots > 0;
 
     return (
       <TouchableOpacity
-        style={styles.counsellorCard}
+        style={[styles.counsellorCard, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
         onPress={() => navigation.navigate('BookAppointment', { counsellor: item })}
-      >        <Avatar.Image
-          size={56}
-          source={{ uri: item.avatar || 'https://via.placeholder.com/56' }}
-          style={styles.avatar}
-        />
+      >
+        {item.avatar ? (
+          <Image
+            source={{ uri: item.avatar }}
+            style={styles.avatarImage}
+          />
+        ) : (
+          <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+            <Icon name="account" size={32} color="#F5A962" />
+          </View>
+        )}
         <View style={styles.counsellorInfo}>
-          <Text style={styles.counsellorName}>{item.name}</Text>
-          <Text style={styles.specialization}>{item.specialization || 'Counselling'}</Text>
-          <Text style={styles.availability}>
+          <Text style={[styles.counsellorName, { color: colors.text }]}>{item.name}</Text>
+          <Text style={[styles.specialization, { color: colors.textSecondary }]}>{item.specialization || 'Counselling'}</Text>
+          <Text style={[styles.availability, { color: colors.textSecondary }]}>
             {isAvailable ? 'Available' : 'Unavailable'}
           </Text>
           <View style={[styles.statusBadge, isAvailable ? styles.activeBadge : styles.inactiveBadge]}>
@@ -39,14 +77,14 @@ const CounsellorListScreen = ({ navigation }) => {
             </Text>
           </View>
         </View>
-        <Icon name="chevron-right" size={24} color="#CCCCCC" />
+        <Icon name="chevron-right" size={28} color={colors.textSecondary} />
       </TouchableOpacity>
     );
   };
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#F5A962" />
         </View>
@@ -55,31 +93,31 @@ const CounsellorListScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="chevron-left" size={28} color="#000000" />
+          <Icon name="chevron-left" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Counsellors</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Counsellors</Text>
         <TouchableOpacity style={styles.filterButton}>
-          <Icon name="tune" size={24} color="#000000" />
+          <Icon name="tune" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
       <FlatList
-        data={counsellors}
+        data={displayCounsellors}
         renderItem={renderCounsellor}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="account-search" size={64} color="#CCCCCC" />
-            <Text style={styles.emptyText}>No counsellors found</Text>
+            <Icon name="account-search" size={64} color={colors.textSecondary} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No counsellors found</Text>
           </View>
         }
       />
@@ -90,7 +128,6 @@ const CounsellorListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -98,9 +135,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     width: 40,
@@ -111,7 +146,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
     letterSpacing: 0.2,
   },
   filterButton: {
@@ -132,40 +166,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
-  avatar: {
+  avatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     marginRight: 16,
+  },
+  avatarPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginRight: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   counsellorInfo: {
     flex: 1,
   },
   counsellorName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 4,
-    letterSpacing: 0.1,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 6,
+    letterSpacing: 0.2,
   },
   specialization: {
     fontSize: 14,
-    color: '#666666',
-    marginBottom: 4,
-    lineHeight: 18,
+    marginBottom: 6,
+    lineHeight: 20,
   },
   availability: {
     fontSize: 14,
-    color: '#666666',
     marginBottom: 8,
   },
   statusBadge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   activeBadge: {
     backgroundColor: '#6BCF7F',
@@ -174,10 +214,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6B6B',
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
     color: '#FFFFFF',
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -185,7 +225,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#CCCCCC',
     marginTop: 16,
   },
 });

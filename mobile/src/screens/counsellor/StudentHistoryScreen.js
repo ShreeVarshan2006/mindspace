@@ -6,12 +6,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
 import { spacing, theme } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const StudentHistoryScreen = () => {
   const dispatch = useDispatch();
   const { sessions = [] } = useSelector((state) => state.sessions || {});
   const [searchQuery, setSearchQuery] = React.useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
 
   useEffect(() => {
     dispatch(fetchSessions());

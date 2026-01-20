@@ -106,7 +106,9 @@ router.get('/my', protect, async (req, res) => {
 // @access  Private (Student)
 router.post('/', protect, authorize('student'), async (req, res) => {
   try {
-    const { counsellorId, timeSlotId, appointmentDate } = req.body;
+    const { counsellorId, timeSlotId, appointmentDate, date, time, startTime, endTime } = req.body;
+
+    const finalDate = appointmentDate || date;
 
     // Check for existing appointment
     const { data: existing } = await supabase
@@ -114,7 +116,7 @@ router.post('/', protect, authorize('student'), async (req, res) => {
       .select('id')
       .eq('student_id', req.user.id)
       .eq('status', 'scheduled')
-      .gte('appointment_date', new Date().toISOString())
+      .gte('appointment_date', new Date().toISOString().split('T')[0])
       .limit(1);
 
     if (existing && existing.length > 0) {
@@ -127,17 +129,26 @@ router.post('/', protect, authorize('student'), async (req, res) => {
         student_id: req.user.id,
         counsellor_id: counsellorId,
         time_slot_id: timeSlotId,
-        appointment_date: appointmentDate,
+        appointment_date: finalDate,
         status: 'scheduled'
       }])
-      .select()
+      .select(`
+        *,
+        counsellor:users!appointments_counsellor_id_fkey(id, name, specialization)
+      `)
       .single();
 
     if (error) throw error;
 
+    // Add time information to response
+    const responseData = {
+      ...appointment,
+      time: time || `${startTime} – ${endTime}` || '09:00 – 09:40'
+    };
+
     res.status(201).json({
       success: true,
-      data: appointment
+      data: responseData
     });
   } catch (error) {
     console.error('Error booking appointment:', error);
@@ -185,6 +196,101 @@ router.put('/:id/cancel', protect, async (req, res) => {
     });
   } catch (error) {
     console.error('Error cancelling appointment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/appointments/:id/approve
+// @desc    Approve appointment (Counsellor)
+// @access  Private (Counsellor)
+router.put('/:id/approve', protect, authorize('counsellor'), async (req, res) => {
+  try {
+    const { data: appointment, error: fetchError } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchError || !appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    // Check authorization - must be the assigned counsellor
+    if (appointment.counsellor_id !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Update status to scheduled
+    const { data: updated, error } = await supabase
+      .from('appointments')
+      .update({ status: 'scheduled' })
+      .eq('id', req.params.id)
+      .select(`
+        *,
+        counsellor:users!appointments_counsellor_id_fkey(id, name, specialization),
+        student:users!appointments_student_id_fkey(id, anonymous_username)
+      `)
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: updated,
+      message: 'Appointment approved successfully'
+    });
+  } catch (error) {
+    console.error('Error approving appointment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/appointments/:id/decline
+// @desc    Decline appointment (Counsellor)
+// @access  Private (Counsellor)
+router.put('/:id/decline', protect, authorize('counsellor'), async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    const { data: appointment, error: fetchError } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchError || !appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    // Check authorization - must be the assigned counsellor
+    if (appointment.counsellor_id !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Update status to cancelled
+    const { data: updated, error } = await supabase
+      .from('appointments')
+      .update({
+        status: 'cancelled',
+        cancellation_reason: reason || 'Declined by counsellor'\n
+      })
+      .eq('id', req.params.id)
+      .select(`
+        *,
+        counsellor:users!appointments_counsellor_id_fkey(id, name, specialization),
+        student:users!appointments_student_id_fkey(id, anonymous_username)
+      `)
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: updated,
+      message: 'Appointment declined'
+    });
+  } catch (error) {
+    console.error('Error declining appointment:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

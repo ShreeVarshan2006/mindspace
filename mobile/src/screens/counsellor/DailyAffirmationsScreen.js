@@ -5,10 +5,12 @@ import { Text, Card } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { spacing } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const DailyAffirmationsScreen = ({ navigation }) => {
     const [affirmationText, setAffirmationText] = useState('');
     const [savedAffirmations, setSavedAffirmations] = useState([]);
+    const { colors } = useTheme();
 
     useEffect(() => {
         loadAffirmations();
@@ -35,6 +37,9 @@ const DailyAffirmationsScreen = ({ navigation }) => {
             id: Date.now().toString(),
             text: affirmationText.trim(),
             date: new Date().toISOString(),
+            createdBy: 'counsellor',
+            isActive: true,
+            forStudents: true, // Flag to indicate this is for students who opted in
         };
 
         const updated = [newAffirmation, ...savedAffirmations];
@@ -42,9 +47,18 @@ const DailyAffirmationsScreen = ({ navigation }) => {
         setAffirmationText('');
 
         try {
+            // Save counsellor's affirmations
             await AsyncStorage.setItem('counsellor_affirmations', JSON.stringify(updated));
-            Alert.alert('Success', 'Affirmation saved successfully');
+
+            // Also save to shared affirmations for students to access
+            const sharedAffirmations = await AsyncStorage.getItem('shared_affirmations');
+            const shared = sharedAffirmations ? JSON.parse(sharedAffirmations) : [];
+            shared.unshift(newAffirmation);
+            await AsyncStorage.setItem('shared_affirmations', JSON.stringify(shared));
+
+            Alert.alert('✅ Success', 'Affirmation saved and will be visible to students who have opted in');
         } catch (error) {
+            console.log('Save error:', error);
             Alert.alert('Error', 'Failed to save affirmation');
         }
     };
@@ -82,26 +96,26 @@ const DailyAffirmationsScreen = ({ navigation }) => {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
             {/* Header */}
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Icon name="chevron-left" size={28} color="#000000" />
+                    <Icon name="chevron-left" size={28} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Daily Affirmations</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Daily Affirmations</Text>
                 <View style={styles.headerSpacer} />
             </View>
 
-            <ScrollView style={styles.container}>
+            <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
                 {/* Input Section */}
                 <View style={styles.inputSection}>
-                    <Text style={styles.inputLabel}>Create Today's Affirmation</Text>
+                    <Text style={[styles.inputLabel, { color: colors.text }]}>Create Today's Affirmation</Text>
                     <RNTextInput
-                        style={styles.textInput}
+                        style={[styles.textInput, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
                         value={affirmationText}
                         onChangeText={setAffirmationText}
                         placeholder="Write an inspiring affirmation for students..."
-                        placeholderTextColor="#999999"
+                        placeholderTextColor={colors.text + '80'}
                         multiline
                         numberOfLines={4}
                         textAlignVertical="top"
@@ -117,24 +131,24 @@ const DailyAffirmationsScreen = ({ navigation }) => {
 
                 {/* Saved Affirmations */}
                 <View style={styles.affirmationsSection}>
-                    <Text style={styles.sectionTitle}>Saved Affirmations</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Saved Affirmations</Text>
                     {savedAffirmations.length === 0 ? (
                         <View style={styles.emptyState}>
                             <Icon name="lightbulb-outline" size={64} color="#CCCCCC" />
-                            <Text style={styles.emptyText}>No affirmations yet</Text>
-                            <Text style={styles.emptySubtext}>Create your first affirmation above</Text>
+                            <Text style={[styles.emptyText, { color: colors.text + '80' }]}>No affirmations yet</Text>
+                            <Text style={[styles.emptySubtext, { color: colors.text + '60' }]}>Create your first affirmation above</Text>
                         </View>
                     ) : (
                         savedAffirmations.map((affirmation) => (
-                            <Card key={affirmation.id} style={styles.affirmationCard}>
+                            <Card key={affirmation.id} style={[styles.affirmationCard, { backgroundColor: colors.card }]}>
                                 <Card.Content>
                                     <View style={styles.cardHeader}>
-                                        <Text style={styles.dateText}>{formatDate(affirmation.date)}</Text>
+                                        <Text style={[styles.dateText, { color: colors.text + '80' }]}>{formatDate(affirmation.date)}</Text>
                                         <TouchableOpacity onPress={() => handleDeleteAffirmation(affirmation.id)}>
                                             <Icon name="delete-outline" size={24} color="#FF6B6B" />
                                         </TouchableOpacity>
                                     </View>
-                                    <Text style={styles.affirmationText}>{affirmation.text}</Text>
+                                    <Text style={[styles.affirmationText, { color: colors.text }]}>{affirmation.text}</Text>
                                 </Card.Content>
                             </Card>
                         ))

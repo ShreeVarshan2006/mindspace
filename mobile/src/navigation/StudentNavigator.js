@@ -25,34 +25,34 @@ const HomeStack = () => (
       options={{ headerShown: false }}
     />
     <Stack.Screen
+      name="MoodTracker"
+      component={MoodTrackerScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="CounsellorList"
       component={CounsellorListScreen}
-      options={{ title: 'Counsellors' }}
+      options={{ headerShown: false }}
     />
     <Stack.Screen
       name="BookAppointment"
       component={BookAppointmentScreen}
-      options={{ title: 'Book Appointment' }}
+      options={{ headerShown: false }}
     />
-    <Stack.Screen
-      name="QRCode"
-      component={QRCodeScreen}
-      options={{ title: 'My QR Code' }}
-    />
-  </Stack.Navigator>
-);
-
-const JournalStack = () => (
-  <Stack.Navigator>
     <Stack.Screen
       name="JournalList"
       component={JournalListScreen}
-      options={{ title: 'My Journals' }}
+      options={{ headerShown: false }}
     />
     <Stack.Screen
       name="JournalEditor"
       component={JournalEditorScreen}
-      options={{ title: 'Write Journal' }}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="QRCode"
+      component={QRCodeScreen}
+      options={{ headerShown: false }}
     />
   </Stack.Navigator>
 );
@@ -69,13 +69,7 @@ const StudentNavigator = () => {
               iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Appointments':
-              iconName = focused ? 'calendar-check' : 'calendar-check-outline';
-              break;
-            case 'Journal':
-              iconName = focused ? 'book-open' : 'book-open-outline';
-              break;
-            case 'Mood':
-              iconName = focused ? 'emoticon-happy' : 'emoticon-happy-outline';
+              iconName = focused ? 'calendar' : 'calendar-outline';
               break;
             case 'History':
               iconName = focused ? 'history' : 'history';
@@ -96,8 +90,6 @@ const StudentNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Appointments" component={AppointmentsScreen} />
-      <Tab.Screen name="Journal" component={JournalStack} />
-      <Tab.Screen name="Mood" component={MoodTrackerScreen} />
       <Tab.Screen name="History" component={SessionHistoryScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

@@ -5,10 +5,12 @@ import { Text, FAB } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchJournals, deleteJournal } from '../../redux/slices/journalSlice';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing, theme } from '../../constants/theme';
 
 const JournalListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { journals = [] } = useSelector((state) => state.journals || {});
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -39,44 +41,44 @@ const JournalListScreen = ({ navigation }) => {
   const renderJournal = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('JournalEditor', { journal: item })}
-      style={styles.card}
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
     >
       <View style={styles.cardHeader}>
-        <Text style={styles.date}>
+        <Text style={[styles.date, { color: colors.textSecondary }]}>
           {new Date(item.date).toISOString().split('T')[0]}
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate('JournalEditor', { journal: item })}>
-          <Icon name="square-edit-outline" size={20} color="#666666" />
+          <Icon name="square-edit-outline" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
-      <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
-      <Text style={styles.content} numberOfLines={2}>{item.content}</Text>
+      <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>{item.title}</Text>
+      <Text style={[styles.content, { color: colors.textSecondary }]} numberOfLines={2}>{item.content}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="chevron-left" size={28} color="#000000" />
+            <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Journal</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Journal</Text>
           <TouchableOpacity>
-            <Icon name="filter-variant" size={24} color="#000000" />
+            <Icon name="filter-variant" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Icon name="magnify" size={20} color="#999999" style={styles.searchIcon} />
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Icon name="magnify" size={20} color={colors.textSecondary} style={styles.searchIcon} />
           <TextInput
             placeholder="Search journal entries..."
-            placeholderTextColor="#999999"
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
           />
         </View>
 
@@ -87,15 +89,16 @@ const JournalListScreen = ({ navigation }) => {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Icon name="book-open-outline" size={64} color="#CCCCCC" />
-              <Text style={styles.emptyText}>No journal entries yet</Text>
-              <Text style={styles.emptySubtext}>Start writing to track your thoughts</Text>
+              <Icon name="book-open-outline" size={64} color={colors.textSecondary} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No journal entries yet</Text>
+              <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Start writing to track your thoughts</Text>
             </View>
           }
         />
         <FAB
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: '#F5A962' }]}
           icon="plus"
+          color="#FFFFFF"
           color="#FFFFFF"
           onPress={() => navigation.navigate('JournalEditor')}
         />
@@ -142,7 +145,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#000000',
     padding: 0,
   },
   list: {
@@ -150,10 +152,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   card: {
-    backgroundColor: '#FFF4EC',
     borderRadius: 12,
     padding: 16,
     marginBottom: 15,
+    elevation: 1,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -164,20 +166,17 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#999999',
     letterSpacing: 0.2,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
     marginBottom: 8,
     letterSpacing: 0.3,
   },
   content: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#666666',
     lineHeight: 20,
     letterSpacing: 0.2,
   },
@@ -188,14 +187,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#999999',
     marginTop: 15,
     letterSpacing: 0.2,
   },
   emptySubtext: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#CCCCCC',
     marginTop: 8,
     letterSpacing: 0.2,
   },
@@ -204,7 +201,6 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 10,
     bottom: 10,
-    backgroundColor: '#F5A962',
     borderRadius: 30,
   },
 });

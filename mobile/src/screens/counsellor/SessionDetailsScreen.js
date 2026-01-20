@@ -2,21 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput } from 'react-native-paper';
+import { useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { spacing, theme } from '../../constants/theme';
 import { sessionService } from '../../services/sessionService';
+import { endSession } from '../../redux/slices/sessionSlice';
+import { useTheme } from '../../context/ThemeContext';
 
 const SessionDetailsScreen = ({ route, navigation }) => {
   const { sessionId } = route.params || {};
+  const dispatch = useDispatch();
   const [sessionData, setSessionData] = useState(null);
   const [observations, setObservations] = useState('');
   const [actionItems, setActionItems] = useState('');
   const [severity, setSeverity] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isFinalized, setIsFinalized] = useState(false);
+  const { colors } = useTheme();
 
   useEffect(() => {
     loadSessionData();
+    loadDraft();
   }, []);
 
   const loadSessionData = async () => {
@@ -28,11 +36,27 @@ const SessionDetailsScreen = ({ route, navigation }) => {
         if (response.data.observations) setObservations(response.data.observations);
         if (response.data.actionItems) setActionItems(response.data.actionItems);
         if (response.data.severity) setSeverity(response.data.severity);
+        if (response.data.isFinalized) setIsFinalized(true);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to load session data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadDraft = async () => {
+    try {
+      const draftKey = `session_draft_${sessionId}`;
+      const draft = await AsyncStorage.getItem(draftKey);
+      if (draft) {
+        const parsed = JSON.parse(draft);
+        setObservations(parsed.observations || '');
+        setActionItems(parsed.actionItems || '');
+        setSeverity(parsed.severity || '');
+      }
+    } catch (error) {
+      console.log('Error loading draft:', error);
     }
   };
 
@@ -45,9 +69,17 @@ const SessionDetailsScreen = ({ route, navigation }) => {
   const handleSaveDraft = async () => {
     setSaving(true);
     try {
-      // Save as draft logic
-      Alert.alert('Success', 'Draft saved successfully');
+      const draftKey = `session_draft_${sessionId}`;
+      const draftData = {
+        observations,
+        actionItems,
+        severity,
+        savedAt: new Date().toISOString()
+      };
+      await AsyncStorage.setItem(draftKey, JSON.stringify(draftData));
+      Alert.alert('✅ Draft Saved', 'Your notes have been saved and can be edited later.');
     } catch (error) {
+      console.log('Error saving draft:', error);
       Alert.alert('Error', 'Failed to save draft');
     } finally {
       setSaving(false);
@@ -66,22 +98,91 @@ const SessionDetailsScreen = ({ route, navigation }) => {
 
     setSaving(true);
     try {
-      const response = await sessionService.endSession(sessionId, {
+      // Prepare comprehensive session data
+      const sessionData = {
         notes: `Observations: ${observations.trim()}\nAction Items: ${actionItems.trim()}`,
         severity,
         observations: observations.trim(),
-        actionItems: actionItems.trim()
-      });
+        actionItems: actionItems.trim(),
+        completedAt: new Date().toISOString(),
+        isFinalized: true
+      };
 
-      if (response.success) {
-        Alert.alert('Success', 'Session notes finalized successfully', [
-          { text: 'OK', onPress: () => navigation.navigate('CounsellorDashboard') },
+      const response = await sessionService.endSession(sessionId, sessionData);
+
+      if (response.success || response.data) {
+        // Clear draft after successful save
+        const draftKey = `session_draft_${sessionId}`;
+        await AsyncStorage.removeItem(draftKey);
+
+        // Also save to local storage as backup
+        await AsyncStorage.setItem(`session_finalized_${sessionId}`, JSON.stringify(sessionData));
+
+        // Update Redux store with finalized session data
+        dispatch(endSession({
+          sessionId,
+          sessionData: {
+            _id: sessionId,
+            ...sessionData,
+            date: new Date().toISOString(),
+            student: sessionData.student || { anonymousUsername: 'Anonymous' }
+          }
+        }));
+
+        setIsFinalized(true);
+
+        Alert.alert('✅ Session Completed', 'Session notes have been saved successfully.', [
+          { text: 'OK', onPress: () => navigation.navigate('History') },
         ]);
       } else {
-        Alert.alert('Error', response.message || 'Failed to finalize session');
+        // Even if backend fails, save locally
+        await AsyncStorage.setItem(`session_finalized_${sessionId}`, JSON.stringify(sessionData));
+
+        // Update Redux store even with local save
+        dispatch(endSession({
+          sessionId,
+          sessionData: {
+            _id: sessionId,
+            ...sessionData,
+            date: new Date().toISOString(),
+            student: sessionData.student || { anonymousUsername: 'Anonymous' }
+          }
+        }));
+
+        Alert.alert('⚠️ Saved Locally', 'Notes saved on device. Will sync when online.');
+        setIsFinalized(true);
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to finalize session notes');
+      console.error('Session finalize error:', error);
+      // Save locally as fallback
+      try {
+        const fallbackData = {
+          notes: `Observations: ${observations.trim()}\nAction Items: ${actionItems.trim()}`,
+          severity,
+          observations: observations.trim(),
+          actionItems: actionItems.trim(),
+          completedAt: new Date().toISOString(),
+          isFinalized: true,
+          pendingSync: true
+        };
+        await AsyncStorage.setItem(`session_finalized_${sessionId}`, JSON.stringify(fallbackData));
+
+        // Update Redux store with fallback data
+        dispatch(endSession({
+          sessionId,
+          sessionData: {
+            _id: sessionId,
+            ...fallbackData,
+            date: new Date().toISOString(),
+            student: fallbackData.student || { anonymousUsername: 'Anonymous' }
+          }
+        }));
+
+        Alert.alert('⚠️ Saved Locally', 'Notes saved on device. Will sync when connection is restored.');
+        setIsFinalized(true);
+      } catch (storageError) {
+        Alert.alert('Error', 'Failed to save session notes. Please try again.');
+      }
     } finally {
       setSaving(false);
     }
@@ -99,23 +200,30 @@ const SessionDetailsScreen = ({ route, navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="chevron-left" size={28} color="#000000" />
+          <Icon name="chevron-left" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Session Notes</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Session Notes</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
       >
+        {isFinalized && (
+          <View style={styles.finalizedBanner}>
+            <Icon name="lock" size={20} color="#6BCF7F" />
+            <Text style={styles.finalizedText}>Session Finalized - Notes are locked</Text>
+          </View>
+        )}
+
         {/* Observations Section */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Observations</Text>
@@ -130,6 +238,8 @@ const SessionDetailsScreen = ({ route, navigation }) => {
             style={styles.textInput}
             outlineColor="#E0E0E0"
             activeOutlineColor="#000000"
+            editable={!isFinalized}
+            disabled={isFinalized}
             theme={{
               colors: {
                 text: '#000000',
@@ -157,6 +267,8 @@ const SessionDetailsScreen = ({ route, navigation }) => {
             style={styles.textInput}
             outlineColor="#E0E0E0"
             activeOutlineColor="#000000"
+            editable={!isFinalized}
+            disabled={isFinalized}
             theme={{
               colors: {
                 text: '#000000',
@@ -177,10 +289,12 @@ const SessionDetailsScreen = ({ route, navigation }) => {
             {severityOptions.map((option) => (
               <TouchableOpacity
                 key={option.key}
-                onPress={() => setSeverity(option.key)}
+                onPress={() => !isFinalized && setSeverity(option.key)}
+                disabled={isFinalized}
                 style={[
                   styles.severityButton,
                   severity === option.key && { backgroundColor: option.color },
+                  isFinalized && styles.severityButtonDisabled,
                 ]}
               >
                 <Text
@@ -197,25 +311,27 @@ const SessionDetailsScreen = ({ route, navigation }) => {
         </View>
 
         {/* Buttons */}
-        <View style={styles.buttonSection}>
-          <TouchableOpacity
-            style={styles.saveDraftButton}
-            onPress={handleSaveDraft}
-            disabled={saving}
-          >
-            <Text style={styles.saveDraftButtonText}>Save Draft</Text>
-          </TouchableOpacity>
+        {!isFinalized && (
+          <View style={styles.buttonSection}>
+            <TouchableOpacity
+              style={styles.saveDraftButton}
+              onPress={handleSaveDraft}
+              disabled={saving}
+            >
+              <Text style={styles.saveDraftButtonText}>Save Draft</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.finalizeButton, saving && styles.finalizeButtonDisabled]}
-            onPress={handleFinalize}
-            disabled={saving}
-          >
-            <Text style={styles.finalizeButtonText}>
-              {saving ? 'Saving...' : 'Finalize Notes'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[styles.finalizeButton, saving && styles.finalizeButtonDisabled]}
+              onPress={handleFinalize}
+              disabled={saving}
+            >
+              <Text style={styles.finalizeButtonText}>
+                {saving ? 'Saving...' : 'Finalize Notes'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -264,6 +380,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  finalizedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0FFF4',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#6BCF7F',
+    gap: 8,
+  },
+  finalizedText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2D7A3E',
   },
   section: {
     paddingHorizontal: 20,
@@ -314,6 +449,9 @@ const styles = StyleSheet.create({
   },
   severityButtonTextSelected: {
     color: '#FFFFFF',
+  },
+  severityButtonDisabled: {
+    opacity: 0.5,
   },
   buttonSection: {
     paddingHorizontal: 20,

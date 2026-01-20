@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Text } from 'react-native-paper';
@@ -56,13 +57,17 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.content}>
             {/* Dual Logos */}
             <View style={styles.logosContainer}>
-              <View style={styles.logoCircle}>
-                <Icon name="brain" size={48} color="#FFFFFF" />
-              </View>
+              <Image
+                source={require('../../../assets/images/brain-logo.png')}
+                style={styles.brainLogo}
+                resizeMode="contain"
+              />
               <View style={styles.logoSpacer} />
-              <View style={styles.srmLogoContainer}>
-                <Icon name="school" size={48} color="#5B8DBE" />
-              </View>
+              <Image
+                source={require('../../../assets/images/srm-logo.png')}
+                style={styles.srmLogo}
+                resizeMode="contain"
+              />
             </View>
 
             {/* Title */}
@@ -175,24 +180,16 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     marginTop: spacing.lg,
   },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#F5A962',
-    justifyContent: 'center',
-    alignItems: 'center',
+  brainLogo: {
+    width: 150,
+    height: 150,
   },
   logoSpacer: {
-    width: 16,
+    width: 20,
   },
-  srmLogoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFF4EC',
-    justifyContent: 'center',
-    alignItems: 'center',
+  srmLogo: {
+    width: 150,
+    height: 150,
   },
   title: {
     fontSize: 28,

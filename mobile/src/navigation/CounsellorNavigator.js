@@ -12,6 +12,7 @@ import StudentHistoryScreen from '../screens/counsellor/StudentHistoryScreen';
 import SessionHistoryScreen from '../screens/counsellor/SessionHistoryScreen';
 import CounsellorProfileScreen from '../screens/counsellor/CounsellorProfileScreen';
 import DailyAffirmationsScreen from '../screens/counsellor/DailyAffirmationsScreen';
+import PendingAppointmentsScreen from '../screens/counsellor/PendingAppointmentsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -26,6 +27,11 @@ const HomeStack = () => (
     <Stack.Screen
       name="MyAppointments"
       component={CounsellorAppointmentsScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="PendingAppointments"
+      component={PendingAppointmentsScreen}
       options={{ headerShown: false }}
     />
     <Stack.Screen

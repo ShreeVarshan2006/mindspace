@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Animated, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Animated, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Avatar } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,12 +8,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchMyAppointments } from '../../redux/slices/appointmentSlice';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
 import { spacing, theme } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const CounsellorDashboard = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { appointments = [] } = useSelector((state) => state.appointments || {});
   const { sessions = [] } = useSelector((state) => state.sessions || {});
+  const { colors } = useTheme();
   const safeAppointments = Array.isArray(appointments) ? appointments : [];
   const safeSessions = Array.isArray(sessions) ? sessions : [];
   const [refreshing, setRefreshing] = React.useState(false);
@@ -27,8 +29,9 @@ const CounsellorDashboard = ({ navigation }) => {
       new Date(apt.appointmentDate || apt.date).toDateString() === new Date().toDateString()
   );
 
-  const pendingReviews = safeSessions.filter(
-    (session) => session.status === 'pending' || !session.notes
+  // Students awaiting appointment bookings (pending status)
+  const pendingAppointments = safeAppointments.filter(
+    (apt) => apt.status === 'pending'
   );
 
   const onRefresh = React.useCallback(async () => {
@@ -108,40 +111,39 @@ const CounsellorDashboard = ({ navigation }) => {
   });
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         <ScrollView
-          style={styles.container}
+          style={[styles.container, { backgroundColor: colors.background }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
           {/* Header */}
           <View style={styles.header}>
-            <Avatar.Icon
-              size={56}
-              icon="brain"
-              style={styles.headerIcon}
-              color="#FFFFFF"
+            <Image
+              source={require('../../../assets/images/brain-logo.png')}
+              style={styles.headerLogo}
+              resizeMode="contain"
             />
           </View>
 
           {/* Greeting */}
           <View style={styles.greetingSection}>
-            <Text style={styles.welcomeText}>Welcome, {user?.name || 'Dr. Chen'}!</Text>
-            <Text style={styles.dateText}>
+            <Text style={[styles.welcomeText, { color: colors.text }]}>Welcome, {user?.name || 'Dr. Chen'}!</Text>
+            <Text style={[styles.dateText, { color: colors.text === '#FFFFFF' ? '#AAAAAA' : '#666666' }]}>
               Here's your overview for today, {formattedDate}.
             </Text>
           </View>
 
           {/* Today's Schedule Card */}
-          <View style={styles.scheduleCard}>
-            <Text style={styles.scheduleTitle}>Today's Schedule</Text>
-            <Icon name="calendar" size={40} color="#F09E54" style={styles.scheduleIcon} />
+          <View style={[styles.scheduleCard, { backgroundColor: colors.text === '#FFFFFF' ? '#2C2C2C' : '#FFF5EB' }]}>
+            <Text style={[styles.scheduleTitle, { color: colors.text }]}>Today's Schedule</Text>
+            <Icon name="calendar" size={40} color="#F5A962" style={styles.scheduleIcon} />
 
-            <Text style={styles.upcomingTitle}>
+            <Text style={[styles.upcomingTitle, { color: colors.text }]}>
               {todayAppointments.length} Upcoming Sessions
             </Text>
             {nextSession && (
-              <Text style={styles.nextSessionText}>
+              <Text style={[styles.nextSessionText, { color: colors.text + '80' }]}>
                 Next session starts at {nextSession.time} with {nextSession.student}.
               </Text>
             )}
@@ -162,38 +164,57 @@ const CounsellorDashboard = ({ navigation }) => {
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[
+                styles.actionButton,
+                { backgroundColor: colors.card },
+                checkInTime && styles.actionButtonCheckedIn
+              ]}
               onPress={handleCheckIn}
+              disabled={!!checkInTime}
             >
-              <Icon name="clock-outline" size={40} color="#333333" />
-              <Text style={styles.actionButtonText}>Daily Check-In</Text>
+              <Icon
+                name={checkInTime ? "check-circle" : "clock-outline"}
+                size={40}
+                color={checkInTime ? "#6BCF7F" : colors.text}
+              />
+              <Text style={[
+                styles.actionButtonText,
+                { color: colors.text },
+                checkInTime && styles.actionButtonTextCheckedIn
+              ]}>
+                {checkInTime ? `Checked In at ${checkInTime}` : 'Daily Check-In'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[styles.actionButton, { backgroundColor: colors.card }]}
               onPress={() => navigation.navigate('QRScanner', { mode: 'checkin' })}
             >
-              <Icon name="qrcode-scan" size={40} color="#333333" />
-              <Text style={styles.actionButtonText}>Scan QR Code</Text>
+              <Icon name="qrcode-scan" size={40} color={colors.text} />
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Scan QR Code</Text>
             </TouchableOpacity>
           </View>
 
           {/* Pending Check-ins Card */}
-          <View style={styles.pendingCard}>
+          <TouchableOpacity
+            style={[styles.pendingCard, { backgroundColor: colors.text === '#FFFFFF' ? '#4A9B5A' : '#7FCA89' }]}
+            onPress={() => navigation.navigate('PendingAppointments')}
+            activeOpacity={0.8}
+          >
             <Text style={styles.pendingTitle}>Pending Check-ins</Text>
             <Icon name="account-group" size={40} color="#FFFFFF" style={styles.pendingIcon} />
 
             <Text style={styles.pendingCountText}>
-              {pendingReviews.length} Students Awaiting Review
+              {pendingAppointments.length} Students Awaiting Review
             </Text>
             <Text style={styles.pendingSubtext}>
               Quickly review and follow up on student mood logs.
             </Text>
 
-            <TouchableOpacity onPress={() => navigation.navigate('StudentHistory')}>
-              <Text style={styles.reviewLink}>Review Check-ins</Text>
-            </TouchableOpacity>
-          </View>
+            <View style={styles.reviewLinkContainer}>
+              <Text style={[styles.reviewLink, { color: colors.text === '#FFFFFF' ? '#D4F4DD' : '#1E5E2F' }]}>Review Check-ins</Text>
+            </View>
+          </TouchableOpacity>
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
@@ -203,7 +224,6 @@ const CounsellorDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -213,36 +233,33 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  headerIcon: {
-    backgroundColor: '#5B8DBE',
+  headerLogo: {
+    width: 56,
+    height: 56,
   },
   greetingSection: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 8,
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 6,
   },
   dateText: {
     fontSize: 14,
-    color: '#666666',
     lineHeight: 20,
   },
   scheduleCard: {
-    backgroundColor: '#FFF5EB',
     marginHorizontal: 20,
-    marginTop: 8,
-    borderRadius: 12,
-    padding: 20,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 24,
     alignItems: 'center',
   },
   scheduleTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
     marginBottom: 12,
   },
   scheduleIcon: {
@@ -251,12 +268,10 @@ const styles = StyleSheet.create({
   upcomingTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000000',
     marginBottom: 8,
   },
   nextSessionText: {
     fontSize: 14,
-    color: '#666666',
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
@@ -269,60 +284,72 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    marginTop: 20,
-    gap: 12,
+    marginTop: 24,
+    gap: 16,
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingVertical: 24,
+    borderRadius: 16,
+    paddingVertical: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionButtonText: {
     fontSize: 14,
-    color: '#333333',
-    marginTop: 8,
+    marginTop: 10,
     fontWeight: '500',
   },
   pendingCard: {
-    backgroundColor: '#6BCF7F',
     marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 24,
-    borderRadius: 12,
-    padding: 24,
+    marginTop: 24,
+    marginBottom: 32,
+    borderRadius: 16,
+    padding: 28,
     alignItems: 'center',
   },
   pendingTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 12,
-  },
-  pendingIcon: {
     marginBottom: 16,
   },
+  pendingIcon: {
+    marginBottom: 20,
+  },
   pendingCountText: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 8,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   pendingSubtext: {
     fontSize: 14,
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 20,
-    opacity: 0.9,
+    marginBottom: 20,
+    lineHeight: 22,
+    opacity: 0.95,
+    paddingHorizontal: 8,
+  },
+  reviewLinkContainer: {
+    paddingTop: 4,
   },
   reviewLink: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  actionButtonCheckedIn: {
+    backgroundColor: '#F0FFF4',
+    borderWidth: 2,
+    borderColor: '#6BCF7F',
+  },
+  actionButtonTextCheckedIn: {
+    color: '#2D7A3E',
+    fontSize: 12,
+  },
+  viewScheduleButton: {
+    paddingTop: 4,
   },
 });
 

@@ -219,7 +219,7 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -233,13 +233,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    color: '#F5A962',
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 16,
-    color: theme.colors.placeholder,
+    color: '#666666',
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
@@ -250,6 +250,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: spacing.sm,
+    color: '#000000',
   },
   radioItem: {
     flexDirection: 'row',
@@ -257,10 +258,12 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: spacing.xs,
+    backgroundColor: '#FFFFFF',
   },
   button: {
     marginTop: spacing.md,
     paddingVertical: spacing.xs,
+    backgroundColor: '#F5A962',
   },
   linkButton: {
     marginTop: spacing.md,

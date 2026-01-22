@@ -6,9 +6,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
 import { spacing, theme } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const YearAnalyticsScreen = () => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const sessions = useSelector((state) => state.sessions?.sessions || []);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -51,32 +53,32 @@ const YearAnalyticsScreen = () => {
   const maxSessions = Math.max(...years.map((y) => y.total), 1);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <ScrollView style={styles.container}>
-          <View style={styles.header}>
-            <Icon name="school" size={40} color={theme.colors.primary} />
-            <Text style={styles.title}>Year-wise Analytics</Text>
-            <Text style={styles.subtitle}>Session distribution by academic year</Text>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+          <View style={[styles.header, { backgroundColor: colors.background }]}>
+            <Icon name="school" size={40} color="#F5A962" />
+            <Text style={[styles.title, { color: colors.text }]}>Year-wise Analytics</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Session distribution by academic year</Text>
           </View>
 
           {years.length === 0 ? (
-            <Card style={styles.card}>
+            <Card style={[styles.card, { backgroundColor: colors.surface }]}>
               <Card.Content style={styles.emptyState}>
-                <Icon name="chart-line" size={64} color={theme.colors.disabled} />
-                <Text style={styles.emptyText}>No data available</Text>
+                <Icon name="chart-line" size={64} color={colors.textTertiary} />
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No data available</Text>
               </Card.Content>
             </Card>
           ) : (
             years.map((year, index) => (
-              <Card key={index} style={styles.card}>
+              <Card key={index} style={[styles.card, { backgroundColor: colors.surface }]}>
                 <Card.Content>
                   <View style={styles.yearHeader}>
-                    <Text style={styles.yearName}>Year {year.name}</Text>
+                    <Text style={[styles.yearName, { color: colors.text }]}>Year {year.name}</Text>
                     <Text style={styles.yearTotal}>{year.total} sessions</Text>
                   </View>
 
-                  <View style={styles.barContainer}>
+                  <View style={[styles.barContainer, { backgroundColor: colors.card }]}>
                     <View
                       style={[
                         styles.bar,
@@ -87,16 +89,16 @@ const YearAnalyticsScreen = () => {
 
                   <View style={styles.severityBreakdown}>
                     <View style={styles.severityItem}>
-                      <View style={[styles.severityDot, { backgroundColor: '#F44336' }]} />
-                      <Text style={styles.severityText}>High: {year.high}</Text>
+                      <View style={[styles.severityDot, { backgroundColor: '#FF6B6B' }]} />
+                      <Text style={[styles.severityText, { color: colors.textSecondary }]}>High: {year.high}</Text>
                     </View>
                     <View style={styles.severityItem}>
-                      <View style={[styles.severityDot, { backgroundColor: '#FF9800' }]} />
-                      <Text style={styles.severityText}>Moderate: {year.moderate}</Text>
+                      <View style={[styles.severityDot, { backgroundColor: '#F5A962' }]} />
+                      <Text style={[styles.severityText, { color: colors.textSecondary }]}>Moderate: {year.moderate}</Text>
                     </View>
                     <View style={styles.severityItem}>
-                      <View style={[styles.severityDot, { backgroundColor: '#4CAF50' }]} />
-                      <Text style={styles.severityText}>Low: {year.low}</Text>
+                      <View style={[styles.severityDot, { backgroundColor: '#6BCF7F' }]} />
+                      <Text style={[styles.severityText, { color: colors.textSecondary }]}>Low: {year.low}</Text>
                     </View>
                   </View>
                 </Card.Content>
@@ -112,7 +114,7 @@ const YearAnalyticsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -128,7 +130,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: theme.colors.placeholder,
     marginTop: spacing.xs,
   },
   card: {
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
   },
   yearTotal: {
     fontSize: 16,
-    color: theme.colors.primary,
+    color: '#F5A962',
     fontWeight: '600',
   },
   barContainer: {
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   },
   bar: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#F5A962',
     borderRadius: 4,
   },
   severityBreakdown: {
@@ -186,7 +187,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: spacing.md,
-    color: theme.colors.placeholder,
   },
 });
 

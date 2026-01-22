@@ -9,6 +9,17 @@ import { StatusBar } from 'expo-status-bar';
 
 import store from './src/redux/store';
 import AppNavigator from './src/navigation/AppNavigator';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+
+function AppContent() {
+  const { isDarkMode } = useTheme();
+  return (
+    <NavigationContainer>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+      <AppNavigator />
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   console.log('App component rendering...');
@@ -17,12 +28,11 @@ export default function App() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Provider store={store}>
-          <PaperProvider theme={DefaultTheme}>
-            <NavigationContainer>
-              <StatusBar style="dark" />
-              <AppNavigator />
-            </NavigationContainer>
-          </PaperProvider>
+          <ThemeProvider>
+            <PaperProvider theme={DefaultTheme}>
+              <AppContent />
+            </PaperProvider>
+          </ThemeProvider>
         </Provider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

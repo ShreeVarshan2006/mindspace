@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSelector } from 'react-redux';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing, theme } from '../../constants/theme';
 
 const QRCodeScreen = () => {
+  const { colors } = useTheme();
   const { user } = useSelector((state) => state.auth);
   const [imageLoading, setImageLoading] = React.useState(true);
 

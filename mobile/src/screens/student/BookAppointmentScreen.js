@@ -5,27 +5,40 @@ import { Text, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Calendar } from 'react-native-calendars';
-import { fetchTimeSlots, bookAppointment } from '../../redux/slices/appointmentSlice';
+import { fetchTimeSlots, bookAppointment, fetchMyAppointments } from '../../redux/slices/appointmentSlice';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing, theme } from '../../constants/theme';
 
 const BookAppointmentScreen = ({ route, navigation }) => {
-  const { counsellor } = route.params;
+  const { counsellor } = route.params || {};
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { timeSlots = [], isLoading } = useSelector((state) => state.appointments || {});
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(null);
 
-  // Mock time slots for demonstration (replace with actual API data)
-  const mockTimeSlots = [
-    { id: 1, time: '09:00 AM - 10:00 AM', available: true },
-    { id: 2, time: '10:00 AM - 11:00 AM', available: true },
-    { id: 3, time: '11:00 AM - 12:00 PM', available: false },
-    { id: 4, time: '01:00 PM - 02:00 PM', available: true },
-    { id: 5, time: '02:00 PM - 03:00 PM', available: true },
-    { id: 6, time: '03:00 PM - 04:00 PM', available: false },
-    { id: 7, time: '04:00 PM - 05:00 PM', available: true },
+  // Default time slots in proper format (09:00 – 09:40)
+  const defaultTimeSlots = [
+    { id: 1, time: '09:00 – 09:40', startTime: '09:00', endTime: '09:40', available: true },
+    { id: 2, time: '09:40 – 10:20', startTime: '09:40', endTime: '10:20', available: true },
+    { id: 3, time: '10:20 – 11:00', startTime: '10:20', endTime: '11:00', available: true },
+    { id: 4, time: '13:00 – 13:40', startTime: '13:00', endTime: '13:40', available: true },
+    { id: 5, time: '13:40 – 14:20', startTime: '13:40', endTime: '14:20', available: true },
+    { id: 6, time: '14:20 – 15:00', startTime: '14:20', endTime: '15:00', available: true },
+    { id: 7, time: '15:00 – 15:40', startTime: '15:00', endTime: '15:40', available: true },
   ];
+
+  // Redirect to counsellor list if no counsellor selected
+  useEffect(() => {
+    if (!counsellor) {
+      Alert.alert(
+        'Select Counsellor',
+        'Please select a counsellor first',
+        [{ text: 'OK', onPress: () => navigation.navigate('CounsellorList') }]
+      );
+    }
+  }, [counsellor, navigation]);
 
   useEffect(() => {
     if (counsellor) {
@@ -45,18 +58,27 @@ const BookAppointmentScreen = ({ route, navigation }) => {
     }
 
     try {
-      await dispatch(bookAppointment({
-        counsellorId: counsellor._id,
+      const bookingData = {
+        counsellorId: counsellor.id || counsellor._id,
         date: selectedDate,
         time: selectedSlot.time,
+        startTime: selectedSlot.startTime,
+        endTime: selectedSlot.endTime,
+        timeSlotId: selectedSlot.id,
         type: 'individual',
         reason: 'Session booking',
-      })).unwrap();
+      };
 
-      Alert.alert('Success', 'Appointment booked successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+      await dispatch(bookAppointment(bookingData)).unwrap();
+
+      // Refresh appointments immediately so it appears on home screen
+      await dispatch(fetchMyAppointments()).unwrap();
+
+      Alert.alert('Success', 'Appointment booked successfully!', [
+        { text: 'OK', onPress: () => navigation.navigate('StudentDashboard') }
       ]);
     } catch (error) {
+      console.error('Booking error:', error);
       Alert.alert('Error', error || 'Failed to book appointment');
     }
   };
@@ -64,56 +86,56 @@ const BookAppointmentScreen = ({ route, navigation }) => {
   const markedDates = {
     [selectedDate]: {
       selected: true,
-      selectedColor: '#F09E54',
+      selectedColor: '#F5A962',
     },
   };
 
-  const displaySlots = timeSlots.length > 0 ? timeSlots : mockTimeSlots;
+  const displaySlots = timeSlots.length > 0 ? timeSlots : defaultTimeSlots;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="chevron-left" size={28} color="#000000" />
+          <Icon name="chevron-left" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Book Session</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Book Session</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Select a Date Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select a Date</Text>
-          <Text style={styles.sectionSubtitle}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Select a Date</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
             Choose your preferred session date from the calendar.
           </Text>
 
           {/* Calendar */}
-          <View style={styles.calendarContainer}>
+          <View style={[styles.calendarContainer, { backgroundColor: colors.surface }]}>
             <Calendar
               current={selectedDate}
               onDayPress={handleDateSelect}
               markedDates={markedDates}
               theme={{
-                backgroundColor: '#FFFFFF',
-                calendarBackground: '#FFFFFF',
-                textSectionTitleColor: '#666666',
-                selectedDayBackgroundColor: '#F09E54',
+                backgroundColor: colors.surface,
+                calendarBackground: colors.surface,
+                textSectionTitleColor: colors.textSecondary,
+                selectedDayBackgroundColor: '#F5A962',
                 selectedDayTextColor: '#FFFFFF',
-                todayTextColor: '#F09E54',
-                dayTextColor: '#000000',
-                textDisabledColor: '#D3D3D3',
-                dotColor: '#F09E54',
+                todayTextColor: '#F5A962',
+                dayTextColor: colors.text,
+                textDisabledColor: colors.textSecondary,
+                dotColor: '#F5A962',
                 selectedDotColor: '#FFFFFF',
-                arrowColor: '#000000',
-                monthTextColor: '#000000',
+                arrowColor: colors.text,
+                monthTextColor: colors.text,
                 textDayFontFamily: 'System',
                 textMonthFontFamily: 'System',
                 textDayHeaderFontFamily: 'System',
@@ -131,45 +153,53 @@ const BookAppointmentScreen = ({ route, navigation }) => {
 
         {/* Available Time Slots Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Available Time Slots</Text>
-          <Text style={styles.sectionSubtitle}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Available Time Slots</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
             Slots for {new Date(selectedDate).toLocaleDateString('en-US', {
               weekday: 'short',
               month: 'short',
-              day: 'numeric'
+              day: 'numeric',
             })}
           </Text>
 
-          {/* Available Slots Heading */}
-          <Text style={styles.slotsHeading}>Available Slots</Text>
+          <Text style={[styles.availableSlotsHeading, { color: colors.text }]}>Available Slots</Text>
 
           {/* Time Slots Grid */}
           {isLoading ? (
-            <ActivityIndicator style={styles.loader} color="#F09E54" />
+            <ActivityIndicator style={styles.loader} color="#F5A962" />
           ) : (
             <View style={styles.slotsGrid}>
-              {displaySlots.map((slot) => (
-                <TouchableOpacity
-                  key={slot.id || slot._id}
-                  disabled={!slot.available}
-                  onPress={() => setSelectedSlot(slot)}
-                  style={[
-                    styles.slotButton,
-                    selectedSlot?.id === slot.id && styles.slotButtonSelected,
-                    !slot.available && styles.slotButtonDisabled,
-                  ]}
-                >
-                  <Text
+              {displaySlots.map((slot) => {
+                const slotId = slot.id || slot._id;
+                const selectedId = selectedSlot?.id || selectedSlot?._id;
+                const isSelected = selectedId === slotId;
+                const isAvailable = slot.available !== false;
+
+                return (
+                  <TouchableOpacity
+                    key={slotId}
+                    disabled={!isAvailable}
+                    onPress={() => setSelectedSlot(slot)}
                     style={[
-                      styles.slotText,
-                      selectedSlot?.id === slot.id && styles.slotTextSelected,
-                      !slot.available && styles.slotTextDisabled,
+                      styles.slotButton,
+                      isAvailable && !isSelected && { backgroundColor: colors.surface, borderColor: colors.border },
+                      isSelected && styles.slotButtonSelected,
+                      !isAvailable && styles.slotButtonDisabled,
                     ]}
                   >
-                    {slot.time}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.slotText,
+                        isAvailable && !isSelected && { color: colors.text },
+                        isSelected && styles.slotTextSelected,
+                        !isAvailable && styles.slotTextDisabled,
+                      ]}
+                    >
+                      {slot.time}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
         </View>
@@ -186,14 +216,13 @@ const BookAppointmentScreen = ({ route, navigation }) => {
           <Text style={styles.confirmButtonText}>Confirm Booking</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -201,9 +230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     width: 40,
@@ -212,17 +239,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    letterSpacing: 0.2,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   headerSpacer: {
     width: 40,
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   section: {
     paddingHorizontal: 20,
@@ -231,20 +256,32 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontWeight: '800',
     marginBottom: 8,
-    letterSpacing: 0.1,
+    letterSpacing: 0.3,
   },
   sectionSubtitle: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 15,
     marginBottom: 16,
-    lineHeight: 20,
+    lineHeight: 22,
+    fontWeight: '500',
+  },
+  availableSlotsHeading: {
+    fontSize: 19,
+    fontWeight: '800',
+    marginTop: 20,
+    marginBottom: 16,
+    letterSpacing: 0.3,
   },
   calendarContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
+    padding: 12,
+    marginTop: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     overflow: 'hidden',
   },
   calendar: {
@@ -253,7 +290,6 @@ const styles = StyleSheet.create({
   slotsHeading: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000000',
     marginTop: 8,
     marginBottom: 16,
     letterSpacing: 0.1,
@@ -264,45 +300,54 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   slotButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
     minWidth: '47%',
     alignItems: 'center',
+    borderWidth: 2,
   },
   slotButtonSelected: {
-    backgroundColor: '#F09E54',
+    backgroundColor: '#F5A962',
+    borderColor: '#F5A962',
+    elevation: 2,
+    shadowColor: '#F5A962',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   slotButtonDisabled: {
     backgroundColor: '#F5F5F5',
-    opacity: 0.5,
+    borderColor: '#E0E0E0',
+    opacity: 0.6,
   },
   slotText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    letterSpacing: 0.1,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   slotTextSelected: {
     color: '#FFFFFF',
+    fontWeight: '800',
   },
   slotTextDisabled: {
-    color: '#CCCCCC',
+    color: '#999999',
+    textDecorationLine: 'line-through',
+    fontWeight: '500',
   },
   confirmButton: {
-    backgroundColor: '#F09E54',
+    backgroundColor: '#F5A962',
     marginHorizontal: 20,
     marginVertical: 24,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 2,
-    shadowColor: '#F09E54',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    elevation: 4,
+    shadowColor: '#F5A962',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   confirmButtonDisabled: {
     opacity: 0.5,
@@ -310,8 +355,8 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   loader: {
     marginVertical: 24,

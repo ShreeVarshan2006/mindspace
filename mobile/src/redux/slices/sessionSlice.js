@@ -85,7 +85,20 @@ const sessionSlice = createSlice({
       // End session
       .addCase(endSession.fulfilled, (state, action) => {
         state.currentSession = null;
-        state.sessions.unshift(action.payload);
+        // Update existing session or add new one
+        const sessionData = action.payload.data || action.payload;
+        const index = state.sessions.findIndex(s => s._id === sessionData._id);
+        if (index !== -1) {
+          // Update existing session with new data
+          state.sessions[index] = {
+            ...state.sessions[index],
+            ...sessionData,
+            isFinalized: true
+          };
+        } else {
+          // Add new session to the beginning
+          state.sessions.unshift(sessionData);
+        }
       })
       // Submit feedback
       .addCase(submitFeedback.fulfilled, (state, action) => {

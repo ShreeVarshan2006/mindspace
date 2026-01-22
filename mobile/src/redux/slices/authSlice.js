@@ -59,7 +59,7 @@ export const loadStoredAuth = createAsyncThunk(
     try {
       const token = await storageService.getToken();
       const user = await storageService.getUser();
-      
+
       if (token && user) {
         return { token, user };
       }
@@ -75,6 +75,20 @@ export const logout = createAsyncThunk(
   async () => {
     await storageService.removeToken();
     await storageService.removeUser();
+  }
+);
+
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (profileData, { rejectWithValue }) => {
+    try {
+      const response = await authService.updateProfile(profileData);
+      const updatedUser = { ...response.user };
+      await storageService.setUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Profile update failed');
+    }
   }
 );
 
@@ -152,6 +166,19 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
         state.isOnboarded = false;
+      })
+      // Update Profile
+      .addCase(updateProfile.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });

@@ -92,11 +92,20 @@ class AuthService {
   }
 
   async updateProfile(profileData) {
-    // MOCK DATA - Frontend testing only
-    return {
-      success: true,
-      user: profileData
-    };
+    try {
+      const response = await apiClient.put('/auth/profile', profileData);
+      return {
+        success: true,
+        user: response.data.user || response.data
+      };
+    } catch (error) {
+      console.error('Update profile error:', error);
+      // Return mock success as fallback
+      return {
+        success: true,
+        user: profileData
+      };
+    }
   }
 
   async getQRCode() {

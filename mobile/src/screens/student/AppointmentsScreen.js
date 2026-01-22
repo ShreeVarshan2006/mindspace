@@ -5,12 +5,17 @@ import { Text, Card, Chip, Button, FAB, ActivityIndicator, Divider } from 'react
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchMyAppointments, cancelAppointment } from '../../redux/slices/appointmentSlice';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing, theme } from '../../constants/theme';
 
 const AppointmentsScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { appointments = [], isLoading } = useSelector((state) => state.appointments || {});
   const [refreshing, setRefreshing] = React.useState(false);
+
+  // Filter to show only scheduled appointments
+  const scheduledAppointments = appointments.filter(apt => apt.status === 'scheduled');
 
   useEffect(() => {
     dispatch(fetchMyAppointments());
@@ -49,57 +54,57 @@ const AppointmentsScreen = ({ navigation }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'scheduled':
-        return theme.colors.primary;
+        return '#F5A962';
       case 'completed':
-        return theme.colors.success;
+        return '#6BCF7F';
       case 'cancelled':
-        return theme.colors.error;
+        return '#FF6B6B';
       default:
-        return theme.colors.disabled;
+        return '#CCCCCC';
     }
   };
 
   const renderAppointment = ({ item }) => (
-    <Card style={styles.card}>
+    <Card style={[styles.card, { backgroundColor: colors.surface }]}>
       <Card.Content>
-        <View style={styles.header}>
-          <View style={styles.headerInfo}>
-            <Text style={styles.counsellorName}>{item.counsellor?.name}</Text>
-            <Text style={styles.specialization}>{item.counsellor?.specialization}</Text>
-          </View>
-          <Chip
-            mode="flat"
-            style={{ backgroundColor: getStatusColor(item.status) + '20' }}
-            textStyle={{ color: getStatusColor(item.status) }}
-          >
-            {item.status}
-          </Chip>
-        </View>
+        <View style={styles.cardContent}>
+          <View style={styles.mainInfo}>
+            <Text style={[styles.counsellorName, { color: colors.text }]}>{item.counsellor?.name || 'Counsellor'}</Text>
 
-        <Divider style={styles.divider} />
+            <View style={styles.dateTimeRow}>
+              <Icon name="calendar" size={16} color="#F5A962" />
+              <Text style={[styles.dateText, { color: colors.text }]}>
+                {new Date(item.date).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </Text>
+            </View>
 
-        <View style={styles.detailsRow}>
-          <Icon name="calendar" size={16} color={theme.colors.placeholder} />
-          <Text style={styles.detailText}>{new Date(item.date).toLocaleDateString()}</Text>
-        </View>
-        <View style={styles.detailsRow}>
-          <Icon name="clock-outline" size={16} color={theme.colors.placeholder} />
-          <Text style={styles.detailText}>{item.time}</Text>
-        </View>
-        <View style={styles.detailsRow}>
-          <Icon name="account-group" size={16} color={theme.colors.placeholder} />
-          <Text style={styles.detailText}>{item.type}</Text>
-        </View>
-        {item.reason && (
-          <View style={styles.detailsRow}>
-            <Icon name="text" size={16} color={theme.colors.placeholder} />
-            <Text style={styles.detailText}>{item.reason}</Text>
+            <View style={styles.dateTimeRow}>
+              <Icon name="clock-outline" size={16} color="#F5A962" />
+              <Text style={[styles.timeText, { color: colors.text }]}>{item.time || '2:00 PM'}</Text>
+            </View>
           </View>
-        )}
+
+          <View style={styles.statusContainer}>
+            <View style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(item.status) }
+            ]}>
+              <Text style={styles.statusText}>{item.status}</Text>
+            </View>
+          </View>
+        </View>
       </Card.Content>
       {item.status === 'scheduled' && (
-        <Card.Actions>
-          <Button onPress={() => handleCancelAppointment(item._id)} textColor={theme.colors.error}>
+        <Card.Actions style={styles.actions}>
+          <Button
+            onPress={() => handleCancelAppointment(item._id)}
+            textColor="#FF6B6B"
+            labelStyle={styles.cancelButtonLabel}
+          >
             Cancel
           </Button>
         </Card.Actions>
@@ -116,10 +121,10 @@ const AppointmentsScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.container}>
         <FlatList
-          data={appointments}
+          data={scheduledAppointments}
           renderItem={renderAppointment}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.list}
@@ -128,22 +133,19 @@ const AppointmentsScreen = ({ navigation }) => {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Icon name="calendar-blank" size={64} color={theme.colors.disabled} />
-              <Text style={styles.emptyText}>No appointments yet</Text>
+              <Icon name="calendar-blank" size={64} color={colors.textSecondary} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No scheduled appointments</Text>
               <Button
                 mode="contained"
                 onPress={() => navigation.navigate('Home', { screen: 'CounsellorList' })}
                 style={styles.emptyButton}
+                buttonColor="#F5A962"
+                textColor="#FFFFFF"
               >
                 Book Appointment
               </Button>
             </View>
           }
-        />
-        <FAB
-          style={styles.fab}
-          icon="plus"
-          onPress={() => navigation.navigate('Home', { screen: 'CounsellorList' })}
         />
       </View>
     </SafeAreaView>
@@ -153,7 +155,6 @@ const AppointmentsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
@@ -168,37 +169,59 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: spacing.md,
+    elevation: 2,
+    borderRadius: 16,
   },
-  header: {
+  cardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: spacing.sm,
   },
-  headerInfo: {
+  mainInfo: {
     flex: 1,
   },
   counsellorName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: 0.2,
   },
-  specialization: {
-    fontSize: 14,
-    color: theme.colors.primary,
-    marginTop: 2,
-  },
-  divider: {
-    marginVertical: spacing.md,
-  },
-  detailsRow: {
+  dateTimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: 8,
+    gap: 8,
   },
-  detailText: {
-    marginLeft: spacing.sm,
-    fontSize: 14,
-    color: theme.colors.text,
+  dateText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  timeText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  statusContainer: {
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+  },
+  statusBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+    textTransform: 'capitalize',
+  },
+  actions: {
+    paddingHorizontal: 8,
+  },
+  cancelButtonLabel: {
+    fontWeight: '700',
+    fontSize: 15,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -206,19 +229,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: theme.colors.disabled,
     marginTop: spacing.md,
     marginBottom: spacing.lg,
   },
   emptyButton: {
     marginTop: spacing.sm,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: theme.colors.primary,
   },
 });
 

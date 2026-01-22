@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Text } from 'react-native-paper';
@@ -56,13 +57,17 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.content}>
             {/* Dual Logos */}
             <View style={styles.logosContainer}>
-              <View style={styles.logoCircle}>
-                <Icon name="brain" size={48} color="#FFFFFF" />
-              </View>
+              <Image
+                source={require('../../../assets/images/brain-logo.png')}
+                style={styles.brainLogo}
+                resizeMode="contain"
+              />
               <View style={styles.logoSpacer} />
-              <View style={styles.srmLogoContainer}>
-                <Icon name="school" size={48} color="#5B8DBE" />
-              </View>
+              <Image
+                source={require('../../../assets/images/srm-logo.png')}
+                style={styles.srmLogo}
+                resizeMode="contain"
+              />
             </View>
 
             {/* Title */}
@@ -175,24 +180,16 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     marginTop: spacing.lg,
   },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#5B8DBE',
-    justifyContent: 'center',
-    alignItems: 'center',
+  brainLogo: {
+    width: 150,
+    height: 150,
   },
   logoSpacer: {
-    width: 16,
+    width: 20,
   },
-  srmLogoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E8F0F8',
-    justifyContent: 'center',
-    alignItems: 'center',
+  srmLogo: {
+    width: 150,
+    height: 150,
   },
   title: {
     fontSize: 28,
@@ -224,14 +221,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   loginButton: {
-    backgroundColor: '#F09E54',
+    backgroundColor: '#F5A962',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
     elevation: 2,
-    shadowColor: '#F09E54',
+    shadowColor: '#F5A962',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -253,10 +250,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 16,
     borderWidth: 1.5,
-    borderColor: '#000000',
+    borderColor: '#F5A962',
   },
   registerButtonText: {
-    color: '#000000',
+    color: '#F5A962',
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: 0.3,

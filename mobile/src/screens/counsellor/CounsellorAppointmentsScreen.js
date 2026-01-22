@@ -6,11 +6,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchMyAppointments } from '../../redux/slices/appointmentSlice';
 import { spacing, theme } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const CounsellorAppointmentsScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { appointments = [], isLoading } = useSelector((state) => state.appointments || {});
   const [refreshing, setRefreshing] = React.useState(false);
+  const { colors } = useTheme();
 
   useEffect(() => {
     dispatch(fetchMyAppointments());
@@ -52,19 +54,20 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
       ? 'Today'
       : appointmentDate.toDateString() === new Date(Date.now() + 86400000).toDateString()
         ? 'Tomorrow'
-        : appointmentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        : appointmentDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
         <View style={styles.cardHeader}>
           <Avatar.Image
-            size={48}
-            source={{ uri: item.student?.avatar || 'https://via.placeholder.com/48' }}
+            size={56}
+            source={{ uri: item.student?.avatar || 'https://via.placeholder.com/56' }}
             style={styles.avatar}
           />
           <View style={styles.headerInfo}>
-            <Text style={styles.studentId}>
-              Student ID: {item.student?.studentId || item.student?.anonymousUsername || '#CW876'}
+            <Text style={[styles.studentLabel, { color: colors.text + '80' }]}>Student ID:</Text>
+            <Text style={[styles.studentId, { color: colors.text }]}>
+              {item.student?.studentId || item.student?.anonymousUsername || '#CW876'}
             </Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
@@ -72,12 +75,14 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <Text style={styles.dateText}>Date: {dateLabel}, {appointmentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
-        <Text style={styles.timeText}>Time: {item.time || '10:00 AM - 11:00 AM'}</Text>
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+        <Text style={[styles.infoText, { color: colors.text }]}>Date: {dateLabel}, {appointmentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
+        <Text style={[styles.infoText, { color: colors.text }]}>Time: {item.time || '10:00 AM - 11:00 AM'}</Text>
 
         <TouchableOpacity
           style={styles.startButton}
-          onPress={() => navigation.navigate('SessionDetails', { appointmentId: item._id })}
+          onPress={() => navigation.navigate('QRScanner', { mode: 'checkin', appointmentId: item._id })}
         >
           <Text style={styles.startButtonText}>Start Session</Text>
         </TouchableOpacity>
@@ -96,13 +101,13 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
-        <View style={styles.header}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="chevron-left" size={28} color="#000000" />
+            <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Appointments</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>My Appointments</Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -115,7 +120,7 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Icon name="calendar-blank" size={64} color="#CCCCCC" />
-              <Text style={styles.emptyText}>No appointments</Text>
+              <Text style={[styles.emptyText, { color: colors.text + '80' }]}>No appointments</Text>
             </View>
           }
         />
@@ -127,7 +132,6 @@ const CounsellorAppointmentsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -138,9 +142,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
   backButton: {
     width: 40,
@@ -151,7 +153,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
     flex: 1,
     textAlign: 'center',
   },
@@ -167,7 +168,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
@@ -183,47 +183,56 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   avatar: {
-    marginRight: 12,
+    marginRight: 16,
   },
   headerInfo: {
     flex: 1,
   },
-  studentId: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  dateText: {
+  studentLabel: {
     fontSize: 14,
     color: '#666666',
     marginBottom: 4,
   },
-  timeText: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 16,
+  studentId: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 0.5,
   },
-  startButton: {
-    backgroundColor: '#F09E54',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  statusBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  startButtonText: {
-    fontSize: 16,
+  statusText: {
+    fontSize: 13,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginBottom: 16,
+  },
+  infoText: {
+    fontSize: 15,
+    color: '#666666',
+    marginBottom: 8,
+    letterSpacing: 0.15,
+  },
+  startButton: {
+    backgroundColor: '#F5A962',
+    borderRadius: 24,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  startButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.25,
   },
   emptyContainer: {
     alignItems: 'center',

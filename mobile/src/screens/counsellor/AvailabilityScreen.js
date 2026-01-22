@@ -5,11 +5,13 @@ import { Text, Switch } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Calendar } from 'react-native-calendars';
 import { spacing, theme } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const AvailabilityScreen = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState('2025-12-19');
   const [recurringEnabled, setRecurringEnabled] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
 
   // Time slots for availability
   const timeSlots = [
@@ -52,17 +54,17 @@ const AvailabilityScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="chevron-left" size={28} color="#000000" />
+            <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Manage Availability</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Manage Availability</Text>
           <View style={styles.headerRight} />
         </View>
 
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
           {/* Calendar */}
           <View style={styles.calendarContainer}>
             <Calendar
@@ -71,13 +73,13 @@ const AvailabilityScreen = ({ navigation }) => {
               markedDates={{
                 [selectedDate]: {
                   selected: true,
-                  selectedColor: '#F09E54',
+                  selectedColor: '#F5A962',
                 },
               }}
               theme={{
-                selectedDayBackgroundColor: '#F09E54',
+                selectedDayBackgroundColor: '#F5A962',
                 selectedDayTextColor: '#FFFFFF',
-                todayTextColor: '#F09E54',
+                todayTextColor: '#F5A962',
                 arrowColor: '#000000',
                 monthTextColor: '#000000',
                 textMonthFontSize: 18,
@@ -203,7 +205,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   slotButtonSelected: {
-    backgroundColor: '#F09E54',
+    backgroundColor: '#F5A962',
   },
   slotButtonDisabled: {
     backgroundColor: '#FFFFFF',
@@ -245,7 +247,7 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   saveButton: {
-    backgroundColor: '#F09E54',
+    backgroundColor: '#F5A962',
     marginHorizontal: 20,
     marginTop: 20,
     marginBottom: 40,

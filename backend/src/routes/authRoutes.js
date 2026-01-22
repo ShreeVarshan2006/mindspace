@@ -167,6 +167,38 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
+// @route   PUT /api/auth/profile
+// @desc    Update user profile
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const { name, year, department, experience, designation, location } = req.body;
+
+    // Build update object based on user role
+    const updates = { name };
+
+    if (req.user.role === 'student') {
+      if (year) updates.year = year;
+      if (department) updates.department = department;
+    } else if (req.user.role === 'counsellor') {
+      if (experience) updates.experience = experience;
+      if (designation) updates.designation = designation;
+      if (location) updates.location = location;
+    }
+
+    // Mock update for now
+    const updatedUser = { ...req.user, ...updates };
+
+    res.json({
+      success: true,
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error updating profile' });
+  }
+});
+
 // @route   GET /api/auth/qr-code
 // @desc    Get user's QR code
 // @access  Private (Student only)

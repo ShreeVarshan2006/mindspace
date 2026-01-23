@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, Dimensions } from 'react-native';
+import { View, StyleSheet, Alert, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Button, TextInput, Card, IconButton } from 'react-native-paper';
 import { BarCodeScanner } from 'expo-barcode-scanner';
@@ -21,6 +21,19 @@ const QRScannerScreen = ({ route, navigation }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const { colors } = useTheme();
+
+  // Set header options to match theme
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: colors.surface,
+      },
+      headerTintColor: colors.text,
+      headerTitleStyle: {
+        color: colors.text,
+      },
+    });
+  }, [navigation, colors]);
 
   const handleStartSession = async (qrData = null) => {
     const codeToUse = qrData || studentCode.trim();
@@ -151,8 +164,12 @@ const QRScannerScreen = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar
+        barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {scanMode ? (
           <View style={styles.cameraContainer}>
             <BarCodeScanner
@@ -183,15 +200,15 @@ const QRScannerScreen = ({ route, navigation }) => {
           </View>
         ) : (
           <>
-            <Card style={styles.card}>
+            <Card style={[styles.card, { backgroundColor: colors.surface }]}>
               <Card.Content style={styles.cardContent}>
                 <Icon
                   name={mode === 'checkout' ? 'qrcode-remove' : 'qrcode-scan'}
                   size={80}
                   color={mode === 'checkout' ? '#FF5722' : theme.colors.primary}
                 />
-                <Text style={styles.title}>{mode === 'checkout' ? 'End Session' : 'Start Session'}</Text>
-                <Text style={styles.subtitle}>
+                <Text style={[styles.title, { color: colors.text }]}>{mode === 'checkout' ? 'End Session' : 'Start Session'}</Text>
+                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                   {mode === 'checkout'
                     ? 'Scan student\'s QR code to verify and end session'
                     : 'Scan student\'s QR code or enter their anonymous ID manually'
@@ -211,9 +228,9 @@ const QRScannerScreen = ({ route, navigation }) => {
             </Button>
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </View>
 
             <TextInput
@@ -221,11 +238,23 @@ const QRScannerScreen = ({ route, navigation }) => {
               value={studentCode}
               onChangeText={setStudentCode}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { color: colors.text, backgroundColor: colors.surface }]}
+              textColor={colors.text}
               autoCapitalize="characters"
               autoCorrect={false}
               placeholder="e.g., S-A12F9"
-              left={<TextInput.Icon icon="shield-account" />}
+              outlineColor={colors.border}
+              activeOutlineColor={colors.text}
+              placeholderTextColor={colors.placeholder}
+              theme={{
+                colors: {
+                  text: colors.text,
+                  placeholder: colors.placeholder,
+                  primary: '#F5A962',
+                  surfaceVariant: colors.surface,
+                },
+              }}
+              left={<TextInput.Icon icon="shield-account" color={colors.textSecondary} />}
             />
 
             <Button
@@ -248,13 +277,13 @@ const QRScannerScreen = ({ route, navigation }) => {
               Cancel
             </Button>
 
-            <Card style={styles.infoCard}>
+            <Card style={[styles.infoCard, { backgroundColor: colors.surface }]}>
               <Card.Content>
-                <Text style={styles.infoTitle}>📱 How to use:</Text>
-                <Text style={styles.infoText}>1. Tap "Scan QR Code" to use camera</Text>
-                <Text style={styles.infoText}>2. Or manually enter anonymous ID</Text>
-                <Text style={styles.infoText}>3. Click "Start Session" to begin</Text>
-                <Text style={styles.infoText}>
+                <Text style={[styles.infoTitle, { color: colors.text }]}>📱 How to use:</Text>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>1. Tap "Scan QR Code" to use camera</Text>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>2. Or manually enter anonymous ID</Text>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>3. Click "Start Session" to begin</Text>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                   4. After session, add notes and severity
                 </Text>
               </Card.Content>
@@ -269,7 +298,6 @@ const QRScannerScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
@@ -352,7 +380,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: theme.colors.placeholder,
     marginTop: spacing.sm,
     textAlign: 'center',
   },
@@ -367,11 +394,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: theme.colors.border || '#e0e0e0',
   },
   dividerText: {
     marginHorizontal: spacing.md,
-    color: theme.colors.placeholder,
     fontWeight: '600',
   },
   input: {
@@ -385,7 +410,6 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     marginTop: spacing.xl,
-    backgroundColor: theme.colors.surface,
   },
   infoTitle: {
     fontSize: 16,
@@ -394,7 +418,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: theme.colors.placeholder,
     marginBottom: spacing.sm,
     lineHeight: 20,
   },

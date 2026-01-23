@@ -5,6 +5,7 @@ import { TextInput, Button, Chip, Text } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { createJournal, updateJournal } from '../../redux/slices/journalSlice';
 import { useTheme } from '../../context/ThemeContext';
+import { spacing, typography } from '../../constants/theme';
 
 const JournalEditorScreen = ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -64,7 +65,7 @@ const JournalEditorScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -74,9 +75,9 @@ const JournalEditorScreen = ({ route, navigation }) => {
             value={title}
             onChangeText={setTitle}
             mode="outlined"
-            style={[styles.input, { backgroundColor: colors.surface }]}
+            style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
             placeholder="Give your journal a title"
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={colors.placeholder || colors.textSecondary}
             outlineColor={colors.border}
             activeOutlineColor="#F5A962"
             theme={{
@@ -94,9 +95,9 @@ const JournalEditorScreen = ({ route, navigation }) => {
             mode="outlined"
             multiline
             numberOfLines={12}
-            style={[styles.input, styles.contentInput, { backgroundColor: colors.surface }]}
+            style={[styles.input, styles.contentInput, { backgroundColor: colors.surface, color: colors.text }]}
             placeholder="Write your thoughts here..."
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={colors.placeholder || colors.textSecondary}
             textAlignVertical="top"
             outlineColor={colors.border}
             activeOutlineColor="#F5A962"
@@ -118,8 +119,8 @@ const JournalEditorScreen = ({ route, navigation }) => {
                   onPress={() => setMood(m)}
                   style={[
                     styles.chip,
-                    { 
-                      backgroundColor: mood === m ? '#F5A962' : colors.surface, 
+                    {
+                      backgroundColor: mood === m ? '#F5A962' : colors.surface,
                       borderColor: colors.border,
                       borderWidth: 1,
                     }
@@ -142,8 +143,8 @@ const JournalEditorScreen = ({ route, navigation }) => {
                   onPress={() => toggleTag(tag)}
                   style={[
                     styles.chip,
-                    { 
-                      backgroundColor: tags.includes(tag) ? '#6BCF7F' : colors.surface, 
+                    {
+                      backgroundColor: tags.includes(tag) ? '#6BCF7F' : colors.surface,
                       borderColor: colors.border,
                       borderWidth: 1,
                     }
@@ -181,42 +182,42 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
   },
   input: {
-    marginBottom: 16,
+    marginBottom: spacing.md,
+    ...typography.body,
   },
   contentInput: {
-    minHeight: 200,
+    minHeight: 220,
     textAlignVertical: 'top',
   },
   section: {
-    marginBottom: 20,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    letterSpacing: 0.1,
+    ...typography.h4,
+    marginBottom: spacing.sm,
   },
   moodContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: spacing.sm,
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: spacing.sm,
   },
   chip: {
-    marginRight: 4,
-    marginBottom: 4,
+    marginRight: spacing.xs,
+    marginBottom: spacing.xs,
   },
   saveButton: {
-    marginTop: 16,
-    paddingVertical: 6,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
   },
 });
 

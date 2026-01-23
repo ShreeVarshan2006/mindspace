@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, FlatList, Animated } from 'react-native';
+import { View, StyleSheet, FlatList, Animated, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Card, Chip, Searchbar } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -46,12 +46,12 @@ const StudentHistoryScreen = () => {
     if (!item) return null;
 
     return (
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: colors.surface }]}>
         <Card.Content>
           <View style={styles.header}>
             <View style={styles.studentInfo}>
-              <Icon name="shield-account" size={24} color={theme.colors.primary} />
-              <Text style={styles.anonymousId}>{item.student?.anonymousUsername || 'Unknown'}</Text>
+              <Icon name="shield-account" size={24} color="#F5A962" />
+              <Text style={[styles.anonymousId, { color: colors.text }]}>{item.student?.anonymousUsername || 'Unknown'}</Text>
             </View>
             {item.severity && (
               <Chip
@@ -65,19 +65,19 @@ const StudentHistoryScreen = () => {
           </View>
 
           <View style={styles.detailsRow}>
-            <Icon name="calendar" size={16} color={theme.colors.placeholder} />
-            <Text style={styles.detailText}>{new Date(item.date).toLocaleDateString()}</Text>
+            <Icon name="calendar" size={16} color={colors.textSecondary} />
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{new Date(item.date).toLocaleDateString()}</Text>
           </View>
 
           <View style={styles.detailsRow}>
-            <Icon name="clock-outline" size={16} color={theme.colors.placeholder} />
-            <Text style={styles.detailText}>{item.duration || '45 min'}</Text>
+            <Icon name="clock-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{item.duration || '45 min'}</Text>
           </View>
 
           {item.notes && (
-            <View style={styles.notesContainer}>
-              <Text style={styles.notesLabel}>Notes:</Text>
-              <Text style={styles.notesText} numberOfLines={3}>
+            <View style={[styles.notesContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[styles.notesLabel, { color: colors.text }]}>Notes:</Text>
+              <Text style={[styles.notesText, { color: colors.textSecondary }]} numberOfLines={3}>
                 {item.notes}
               </Text>
             </View>
@@ -88,14 +88,21 @@ const StudentHistoryScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar
+        barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <View style={styles.container}>
           <Searchbar
             placeholder="Search by anonymous ID"
             onChangeText={setSearchQuery}
             value={searchQuery}
-            style={styles.searchbar}
+            style={[styles.searchbar, { backgroundColor: colors.surface }]}
+            inputStyle={{ color: colors.text }}
+            placeholderTextColor={colors.placeholder}
+            iconColor={colors.text}
             icon="shield-search"
           />
 
@@ -106,8 +113,8 @@ const StudentHistoryScreen = () => {
             contentContainerStyle={styles.list}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Icon name="history" size={64} color={theme.colors.disabled} />
-                <Text style={styles.emptyText}>No session history found</Text>
+                <Icon name="history" size={64} color={colors.textSecondary} />
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No session history found</Text>
               </View>
             }
           />
@@ -120,7 +127,6 @@ const StudentHistoryScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
@@ -159,13 +165,12 @@ const styles = StyleSheet.create({
   detailText: {
     marginLeft: spacing.sm,
     fontSize: 14,
-    color: theme.colors.text,
   },
   notesContainer: {
     marginTop: spacing.sm,
     padding: spacing.sm,
-    backgroundColor: '#F5F5F5',
     borderRadius: 8,
+    borderWidth: 1,
   },
   notesLabel: {
     fontSize: 12,
@@ -174,7 +179,6 @@ const styles = StyleSheet.create({
   },
   notesText: {
     fontSize: 14,
-    color: theme.colors.placeholder,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -182,7 +186,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: theme.colors.disabled,
     marginTop: spacing.md,
   },
 });

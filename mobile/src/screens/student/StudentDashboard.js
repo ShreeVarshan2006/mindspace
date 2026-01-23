@@ -193,7 +193,7 @@ const StudentDashboard = ({ navigation }) => {
               <Avatar.Image
                 size={48}
                 source={{ uri: upcomingAppointment.counsellor?.avatar || 'https://via.placeholder.com/48' }}
-                style={styles.avatar}
+                style={[styles.avatar, { backgroundColor: colors.card }]}
               />
               <View style={styles.appointmentInfo}>
                 <Text style={[styles.counsellorName, { color: colors.text }]}>

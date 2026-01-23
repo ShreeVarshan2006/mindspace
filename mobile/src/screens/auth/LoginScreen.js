@@ -8,21 +8,26 @@ import {
   Alert,
   TouchableOpacity,
   Image,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Text } from 'react-native-paper';
+import { useTheme } from '../../context/ThemeContext';
+import { Heading, Body, BodySmall, Label as TypographyLabel } from '../../components/Typography';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { login, clearError } from '../../redux/slices/authSlice';
+import { login, loginWithGoogle, clearError } from '../../redux/slices/authSlice';
 import { spacing, theme } from '../../constants/theme';
 
 const LoginScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
   const { isLoading, error } = useSelector((state) => state.auth);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [srmError, setSrmError] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -38,6 +43,15 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      await dispatch(loginWithGoogle()).unwrap();
+      // Navigation handled by AppNavigator based on auth state
+    } catch (err) {
+      Alert.alert('Google Sign-In Failed', err || 'Please try again');
+    }
+  };
+
   React.useEffect(() => {
     return () => {
       dispatch(clearError());
@@ -45,7 +59,11 @@ const LoginScreen = ({ navigation }) => {
   }, [dispatch]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar
+        barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -55,7 +73,7 @@ const LoginScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            {/* Dual Logos */}
+            {/* Logo */}
             <View style={styles.logosContainer}>
               <Image
                 source={require('../../../assets/images/brain-logo.png')}
@@ -63,22 +81,32 @@ const LoginScreen = ({ navigation }) => {
                 resizeMode="contain"
               />
               <View style={styles.logoSpacer} />
-              <Image
-                source={require('../../../assets/images/srm-logo.png')}
-                style={styles.srmLogo}
-                resizeMode="contain"
-              />
+              {srmError ? (
+                <View style={styles.srmFallback}>
+                  <Text style={styles.srmFallbackText}>SRM</Text>
+                </View>
+              ) : (
+                <Image
+                  source={require('../../../assets/images/srm-logo.png')}
+                  style={styles.srmLogo}
+                  resizeMode="contain"
+                  onError={() => setSrmError(true)}
+                />
+              )}
             </View>
 
             {/* Title */}
-            <Text style={styles.title}>Welcome to MindSpace</Text>
-            <Text style={styles.subtitle}>
-              Sign in or create an account to get started.
-            </Text>
+            <Heading level={3} style={[styles.title, { color: colors.text }]}>Welcome to MindSpace</Heading>
+            <BodySmall style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Sign in with your email and password.
+            </BodySmall>
+            <BodySmall style={[styles.infoNote, { color: colors.textSecondary }]}>
+              💡 Students: Use your email and password to sign in. Your anonymous ID will be displayed on your dashboard.
+            </BodySmall>
 
             {/* Email Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email ID</Text>
+              <TypographyLabel style={[styles.label, { color: colors.textSecondary }]}>Email ID</TypographyLabel>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -86,14 +114,16 @@ const LoginScreen = ({ navigation }) => {
                 placeholder="john.doe@example.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                style={styles.input}
-                outlineColor="#E0E0E0"
-                activeOutlineColor="#000000"
-                placeholderTextColor="#999999"
+                style={[styles.input, { color: colors.text }]}
+                textColor={colors.text}
+                outlineColor={colors.border}
+                activeOutlineColor={colors.text}
+                placeholderTextColor={colors.placeholder}
                 theme={{
                   colors: {
-                    text: '#000000',
-                    placeholder: '#999999',
+                    text: colors.text,
+                    placeholder: colors.placeholder,
+                    primary: '#F5A962',
                   },
                   roundness: 12,
                 }}
@@ -102,21 +132,23 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Password Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
+              <TypographyLabel style={[styles.label, { color: colors.textSecondary }]}>Password</TypographyLabel>
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 mode="outlined"
                 placeholder="••••••••"
                 secureTextEntry={!showPassword}
-                style={styles.input}
-                outlineColor="#E0E0E0"
-                activeOutlineColor="#000000"
-                placeholderTextColor="#999999"
+                style={[styles.input, { color: colors.text }]}
+                textColor={colors.text}
+                outlineColor={colors.border}
+                activeOutlineColor={colors.text}
+                placeholderTextColor={colors.placeholder}
                 theme={{
                   colors: {
-                    text: '#000000',
-                    placeholder: '#999999',
+                    text: colors.text,
+                    placeholder: colors.placeholder,
+                    primary: '#F5A962',
                   },
                   roundness: 12,
                 }}
@@ -124,7 +156,7 @@ const LoginScreen = ({ navigation }) => {
                   <TextInput.Icon
                     icon={showPassword ? 'eye-off' : 'eye'}
                     onPress={() => setShowPassword(!showPassword)}
-                    color="#999999"
+                    color={colors.textSecondary}
                   />
                 }
               />
@@ -144,11 +176,29 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Register Button */}
             <TouchableOpacity
-              style={styles.registerButton}
+              style={[styles.registerButton, { backgroundColor: colors.surface }]}
               onPress={() => navigation.navigate('Register')}
               activeOpacity={0.8}
             >
-              <Text style={styles.registerButtonText}>Register</Text>
+              <Text style={[styles.registerButtonText, { color: '#F5A962' }]}>Register</Text>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <BodySmall style={[styles.dividerText, { color: colors.textSecondary }]}>OR</BodySmall>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            </View>
+
+            {/* Google Sign-In Button */}
+            <TouchableOpacity
+              style={[styles.googleButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={handleGoogleLogin}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              <Icon name="google" size={24} color="#DB4437" />
+              <Body style={[styles.googleButtonText, { color: colors.text }]} weight="medium">Continue with Google</Body>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -160,7 +210,6 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -189,35 +238,47 @@ const styles = StyleSheet.create({
   },
   srmLogo: {
     width: 150,
-    height: 150,
+    height: 48,
+  },
+  srmFallback: {
+    width: 150,
+    height: 48,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  srmFallbackText: {
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: '#F5A962',
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000000',
     textAlign: 'center',
     marginBottom: 12,
-    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666666',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 12,
     lineHeight: 22,
+  },
+  infoNote: {
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 18,
+    paddingHorizontal: 16,
+    fontStyle: 'italic',
   },
   inputContainer: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000000',
     marginBottom: 8,
-    letterSpacing: 0.1,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     fontSize: 16,
   },
   loginButton: {
@@ -243,7 +304,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   registerButton: {
-    backgroundColor: '#FFFFFF',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -253,9 +313,37 @@ const styles = StyleSheet.create({
     borderColor: '#F5A962',
   },
   registerButtonText: {
-    color: '#F5A962',
     fontSize: 18,
     fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    elevation: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  googleButtonText: {
+    marginLeft: 12,
     letterSpacing: 0.3,
   },
 });

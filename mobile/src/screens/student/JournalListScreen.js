@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchJournals, deleteJournal } from '../../redux/slices/journalSlice';
 import { useTheme } from '../../context/ThemeContext';
-import { spacing, theme } from '../../constants/theme';
+import { spacing, typography } from '../../constants/theme';
 
 const JournalListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -58,13 +58,13 @@ const JournalListScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Journal</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{'Journal'}</Text>
           <TouchableOpacity>
             <Icon name="filter-variant" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -75,7 +75,7 @@ const JournalListScreen = ({ navigation }) => {
           <Icon name="magnify" size={20} color={colors.textSecondary} style={styles.searchIcon} />
           <TextInput
             placeholder="Search journal entries..."
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={colors.placeholder || colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             style={[styles.searchInput, { color: colors.text }]}
@@ -110,91 +110,76 @@ const JournalListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    letterSpacing: 0.3,
+    ...typography.h3,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    backgroundColor: '#F5F5F5',
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
     borderRadius: 8,
+    borderWidth: 1,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: spacing.sm,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    ...typography.bodySmall,
     padding: 0,
   },
   list: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl,
   },
   card: {
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 15,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     elevation: 1,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.sm + 4,
   },
   date: {
-    fontSize: 14,
-    fontWeight: '400',
-    letterSpacing: 0.2,
+    ...typography.caption,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    letterSpacing: 0.3,
+    ...typography.h4,
+    marginBottom: spacing.sm,
   },
   content: {
-    fontSize: 14,
-    fontWeight: '400',
-    lineHeight: 20,
-    letterSpacing: 0.2,
+    ...typography.bodySmall,
   },
   emptyContainer: {
     alignItems: 'center',
-    marginTop: 100,
+    marginTop: spacing.xxl,
   },
   emptyText: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginTop: 15,
-    letterSpacing: 0.2,
+    ...typography.bodyMedium,
+    marginTop: spacing.md,
   },
   emptySubtext: {
-    fontSize: 14,
-    fontWeight: '400',
-    marginTop: 8,
-    letterSpacing: 0.2,
+    ...typography.bodySmall,
+    marginTop: spacing.sm,
   },
   fab: {
     position: 'absolute',

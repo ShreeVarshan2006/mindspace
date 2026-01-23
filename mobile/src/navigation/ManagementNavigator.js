@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 import { logout } from '../redux/slices/authSlice';
 
 import ManagementDashboard from '../screens/management/ManagementDashboard';
@@ -42,6 +43,7 @@ const HomeStack = () => (
 
 const ManagementNavigator = () => {
   const dispatch = useDispatch();
+  const { colors } = useTheme();
 
   return (
     <Tab.Navigator
@@ -63,7 +65,12 @@ const ManagementNavigator = () => {
           return <Icon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#F5A962',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+        },
         headerShown: false,
       })}
     >

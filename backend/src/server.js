@@ -45,6 +45,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth/google', require('./routes/googleAuthRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/journals', require('./routes/journalRoutes'));
@@ -60,6 +61,7 @@ app.get('/health', (req, res) => {
     routes: {
       active: [
         '/api/auth',
+        '/api/auth/google',
         '/api/appointments',
         '/api/sessions',
         '/api/journals',

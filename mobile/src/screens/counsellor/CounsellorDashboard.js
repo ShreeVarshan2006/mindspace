@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Animated, Alert, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Animated, Alert, Image, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Avatar } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
@@ -92,6 +92,31 @@ const CounsellorDashboard = ({ navigation }) => {
     }
   };
 
+  const handleCheckOut = async () => {
+    Alert.alert(
+      'Check Out',
+      'Are you sure you want to check out? This will mark you as unavailable.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Check Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('checkInDate');
+              await AsyncStorage.removeItem('checkInTime');
+              setCheckInTime(null);
+              Alert.alert('✅ Checked Out', 'You are now marked as unavailable');
+            } catch (error) {
+              console.log('Error clearing check-out:', error);
+              Alert.alert('Error', 'Failed to check out');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const getNextSessionInfo = () => {
     if (todayAppointments.length === 0) return null;
     const next = todayAppointments[0];
@@ -112,6 +137,10 @@ const CounsellorDashboard = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar
+        barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
       <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         <ScrollView
           style={[styles.container, { backgroundColor: colors.background }]}
@@ -195,24 +224,41 @@ const CounsellorDashboard = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
+          {/* Check-Out Button */}
+          {checkInTime && (
+            <View style={styles.checkOutContainer}>
+              <TouchableOpacity
+                style={styles.checkOutButton}
+                onPress={handleCheckOut}
+              >
+                <Icon name="logout" size={24} color="#FF6B6B" />
+                <Text style={styles.checkOutButtonText}>Check Out</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Pending Check-ins Card */}
           <TouchableOpacity
-            style={[styles.pendingCard, { backgroundColor: colors.text === '#FFFFFF' ? '#4A9B5A' : '#7FCA89' }]}
+            style={[styles.pendingCard, {
+              backgroundColor: colors.text === '#FFFFFF' ? '#2D5F3E' : '#E8F5E9',
+              borderColor: colors.text === '#FFFFFF' ? '#4A9B5A' : '#7FCA89',
+              borderWidth: 2
+            }]}
             onPress={() => navigation.navigate('PendingAppointments')}
             activeOpacity={0.8}
           >
-            <Text style={styles.pendingTitle}>Pending Check-ins</Text>
-            <Icon name="account-group" size={40} color="#FFFFFF" style={styles.pendingIcon} />
+            <Text style={[styles.pendingTitle, { color: colors.text === '#FFFFFF' ? '#FFFFFF' : '#1E5E2F' }]}>Pending Check-ins</Text>
+            <Icon name="account-group" size={40} color={colors.text === '#FFFFFF' ? '#FFFFFF' : '#4A9B5A'} style={styles.pendingIcon} />
 
-            <Text style={styles.pendingCountText}>
+            <Text style={[styles.pendingCountText, { color: colors.text === '#FFFFFF' ? '#FFFFFF' : '#2D5F3E' }]}>
               {pendingAppointments.length} Students Awaiting Review
             </Text>
-            <Text style={styles.pendingSubtext}>
+            <Text style={[styles.pendingSubtext, { color: colors.text === '#FFFFFF' ? 'rgba(255,255,255,0.9)' : '#4A9B5A' }]}>
               Quickly review and follow up on student mood logs.
             </Text>
 
             <View style={styles.reviewLinkContainer}>
-              <Text style={[styles.reviewLink, { color: colors.text === '#FFFFFF' ? '#D4F4DD' : '#1E5E2F' }]}>Review Check-ins</Text>
+              <Text style={[styles.reviewLink, { color: colors.text === '#FFFFFF' ? '#A5D6A7' : '#2D5F3E' }]}>Review Check-ins →</Text>
             </View>
           </TouchableOpacity>
         </ScrollView>
@@ -310,7 +356,6 @@ const styles = StyleSheet.create({
   pendingTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#FFFFFF',
     marginBottom: 16,
   },
   pendingIcon: {
@@ -319,17 +364,14 @@ const styles = StyleSheet.create({
   pendingCountText: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 10,
     textAlign: 'center',
   },
   pendingSubtext: {
     fontSize: 14,
-    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 22,
-    opacity: 0.95,
     paddingHorizontal: 8,
   },
   reviewLinkContainer: {
@@ -350,6 +392,26 @@ const styles = StyleSheet.create({
   },
   viewScheduleButton: {
     paddingTop: 4,
+  },
+  checkOutContainer: {
+    paddingHorizontal: 20,
+    marginTop: 16,
+  },
+  checkOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFE5E5',
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
+  },
+  checkOutButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF6B6B',
+    marginLeft: 8,
   },
 });
 

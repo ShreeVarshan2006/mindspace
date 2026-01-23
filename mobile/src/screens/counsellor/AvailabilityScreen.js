@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Switch } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Calendar } from 'react-native-calendars';
-import { spacing, theme } from '../../constants/theme';
+import { spacing, typography } from '../../constants/theme';
+import { Heading, BodySmall } from '../../components/Typography';
 import { useTheme } from '../../context/ThemeContext';
 
 const AvailabilityScreen = ({ navigation }) => {
@@ -17,10 +18,10 @@ const AvailabilityScreen = ({ navigation }) => {
   const timeSlots = [
     { id: 1, time: '09:00 AM - 10:00 AM', selected: false },
     { id: 2, time: '10:00 AM - 11:00 AM', selected: true },
-    { id: 3, time: '11:00 AM - 12:00 PM', selected: false, disabled: true },
+    { id: 3, time: '11:00 AM - 12:00 PM', selected: false, disabled: true, isLunch: true },
     { id: 4, time: '01:00 PM - 02:00 PM', selected: false },
     { id: 5, time: '02:00 PM - 03:00 PM', selected: false },
-    { id: 6, time: '03:00 PM - 04:00 PM', selected: false, disabled: true },
+    { id: 6, time: '03:00 PM - 04:00 PM', selected: false },
     { id: 7, time: '04:00 PM - 05:00 PM', selected: false },
   ];
 
@@ -60,11 +61,14 @@ const AvailabilityScreen = ({ navigation }) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Manage Availability</Text>
+          <Heading level={3} style={styles.headerTitle}>Manage Availability</Heading>
           <View style={styles.headerRight} />
         </View>
 
-        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+        <ScrollView
+          style={[styles.container, { backgroundColor: colors.background }]}
+          contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, paddingTop: spacing.md }}
+        >
           {/* Calendar */}
           <View style={styles.calendarContainer}>
             <Calendar
@@ -77,29 +81,35 @@ const AvailabilityScreen = ({ navigation }) => {
                 },
               }}
               theme={{
+                calendarBackground: colors.surface,
+                backgroundColor: colors.surface,
                 selectedDayBackgroundColor: '#F5A962',
                 selectedDayTextColor: '#FFFFFF',
                 todayTextColor: '#F5A962',
-                arrowColor: '#000000',
-                monthTextColor: '#000000',
-                textMonthFontSize: 18,
-                textMonthFontWeight: 'bold',
-                textDayFontSize: 14,
-                textDayHeaderFontSize: 12,
+                dayTextColor: colors.text,
+                textSectionTitleColor: colors.textSecondary,
+                arrowColor: colors.text,
+                monthTextColor: colors.text,
+                textMonthFontSize: typography.h3.fontSize,
+                textMonthFontWeight: typography.h3.fontWeight,
+                textDayFontSize: typography.caption.fontSize,
+                textDayHeaderFontSize: typography.label.fontSize,
               }}
+              style={{ backgroundColor: colors.surface, borderRadius: 12 }}
             />
           </View>
 
           {/* Available Slots */}
-          <Text style={styles.sectionTitle}>Available Slots</Text>
+          <Heading level={3} style={styles.sectionTitle}>Available Slots</Heading>
           <View style={styles.slotsGrid}>
             {availability.map((slot) => (
               <TouchableOpacity
                 key={slot.id}
                 style={[
                   styles.slotButton,
-                  slot.selected && styles.slotButtonSelected,
-                  slot.disabled && styles.slotButtonDisabled,
+                  { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+                  slot.selected && { backgroundColor: '#F5A962', borderWidth: 0 },
+                  slot.disabled && { backgroundColor: colors.background, opacity: 0.6 },
                 ]}
                 onPress={() => toggleSlot(slot.id)}
                 disabled={slot.disabled}
@@ -107,12 +117,16 @@ const AvailabilityScreen = ({ navigation }) => {
                 <Text
                   style={[
                     styles.slotText,
-                    slot.selected && styles.slotTextSelected,
-                    slot.disabled && styles.slotTextDisabled,
+                    { color: colors.text },
+                    slot.selected && { color: '#FFFFFF' },
+                    slot.disabled && { color: colors.disabled },
                   ]}
                 >
                   {slot.time}
                 </Text>
+                {slot.isLunch && (
+                  <BodySmall style={styles.lunchLabel}>Lunch Break</BodySmall>
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -120,8 +134,8 @@ const AvailabilityScreen = ({ navigation }) => {
           {/* Recurring Availability */}
           <View style={styles.recurringSection}>
             <View style={styles.recurringTextContainer}>
-              <Text style={styles.recurringTitle}>Recurring Availability</Text>
-              <Text style={styles.recurringSubtitle}>Apply these slots to all future weeks.</Text>
+              <Heading level={4} style={styles.recurringTitle}>Recurring Availability</Heading>
+              <BodySmall style={styles.recurringSubtitle}>Apply these slots to all future weeks.</BodySmall>
             </View>
             <Switch
               value={recurringEnabled}
@@ -132,8 +146,8 @@ const AvailabilityScreen = ({ navigation }) => {
           </View>
 
           {/* Save Button */}
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
-            <Text style={styles.saveButtonText}>Save Changes</Text>
+          <TouchableOpacity style={[styles.saveButton, { backgroundColor: '#F5A962' }]} onPress={handleSaveChanges}>
+            <Text style={[styles.saveButtonText, { color: '#FFFFFF' }]}>Save Changes</Text>
           </TouchableOpacity>
         </ScrollView>
       </Animated.View>
@@ -144,17 +158,14 @@ const AvailabilityScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
   backButton: {
     width: 40,
@@ -163,9 +174,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
+    ...typography.h3,
     flex: 1,
     textAlign: 'center',
   },
@@ -174,92 +183,66 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   calendarContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 16,
+    ...typography.h3,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
   },
   slotsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    gap: 12,
+    gap: spacing.md,
   },
   slotButton: {
     width: '47%',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  slotButtonSelected: {
-    backgroundColor: '#F5A962',
-  },
-  slotButtonDisabled: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
   slotText: {
-    fontSize: 14,
-    color: '#000000',
+    ...typography.bodySmall,
     fontWeight: '500',
   },
-  slotTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  slotTextDisabled: {
-    color: '#CCCCCC',
+  lunchLabel: {
+    fontSize: typography.label.fontSize,
+    marginTop: spacing.xs,
+    fontStyle: 'italic',
   },
   recurringSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    marginTop: 20,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
   },
   recurringTextContainer: {
     flex: 1,
     marginRight: 16,
   },
   recurringTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 4,
+    ...typography.h4,
+    marginBottom: spacing.xs,
   },
   recurringSubtitle: {
-    fontSize: 14,
-    color: '#666666',
+    ...typography.bodySmall,
   },
   saveButton: {
-    backgroundColor: '#F5A962',
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 40,
-    borderRadius: 8,
-    paddingVertical: 16,
+    marginTop: spacing.md,
+    marginBottom: spacing.xxl,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    ...typography.button,
   },
 });
 

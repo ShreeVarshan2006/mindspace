@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TextInput } from 'react-native-paper';
 
 const ThemeContext = createContext();
 
@@ -37,6 +38,7 @@ export const ThemeProvider = ({ children }) => {
             surface: '#FFFFFF',
             card: '#F8F8F8',
             text: '#000000',
+            TextInput: '#000000',
             textSecondary: '#666666',
             textTertiary: '#999999',
             border: '#E0E0E0',
@@ -53,6 +55,7 @@ export const ThemeProvider = ({ children }) => {
             surface: '#1A1A1A',
             card: '#252525',
             text: '#FFFFFF',
+            TextInput: '#FFFFFF',
             textSecondary: '#CCCCCC',
             textTertiary: '#999999',
             border: '#333333',

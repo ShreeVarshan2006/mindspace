@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, TextInput } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
@@ -190,10 +190,14 @@ const SessionDetailsScreen = ({ route, navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+        <StatusBar
+          barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.background}
+        />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#F09E54" />
-          <Text style={styles.loadingText}>Loading session...</Text>
+          <ActivityIndicator size="large" color="#F5A962" />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading session...</Text>
         </View>
       </SafeAreaView>
     );
@@ -201,6 +205,10 @@ const SessionDetailsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar
+        barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <TouchableOpacity
@@ -226,7 +234,7 @@ const SessionDetailsScreen = ({ route, navigation }) => {
 
         {/* Observations Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Observations</Text>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>Observations</Text>
           <TextInput
             value={observations}
             onChangeText={setObservations}
@@ -234,28 +242,28 @@ const SessionDetailsScreen = ({ route, navigation }) => {
             multiline
             numberOfLines={5}
             placeholder="Document your key observations during the session..."
-            placeholderTextColor="#999999"
+            placeholderTextColor={colors.placeholder || colors.text + '80'}
             style={styles.textInput}
-            outlineColor="#E0E0E0"
-            activeOutlineColor="#000000"
+            outlineColor={colors.border}
+            activeOutlineColor={colors.text}
             editable={!isFinalized}
             disabled={isFinalized}
             theme={{
               colors: {
-                text: '#000000',
-                placeholder: '#999999',
+                text: colors.text,
+                placeholder: colors.placeholder || colors.text + '80',
               },
               roundness: 12,
             }}
           />
-          <Text style={styles.helperText}>
+          <Text style={[styles.helperText, { color: colors.textSecondary }]}>
             Focus on factual details and client expressions.
           </Text>
         </View>
 
         {/* Action Items Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Action Items</Text>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>Action Items</Text>
           <TextInput
             value={actionItems}
             onChangeText={setActionItems}
@@ -263,28 +271,28 @@ const SessionDetailsScreen = ({ route, navigation }) => {
             multiline
             numberOfLines={5}
             placeholder="List any agreed-upon actions, homework, or follow-ups..."
-            placeholderTextColor="#999999"
+            placeholderTextColor={colors.placeholder || colors.text + '80'}
             style={styles.textInput}
-            outlineColor="#E0E0E0"
-            activeOutlineColor="#000000"
+            outlineColor={colors.border}
+            activeOutlineColor={colors.text}
             editable={!isFinalized}
             disabled={isFinalized}
             theme={{
               colors: {
-                text: '#000000',
-                placeholder: '#999999',
+                text: colors.text,
+                placeholder: colors.placeholder || colors.text + '80',
               },
               roundness: 12,
             }}
           />
-          <Text style={styles.helperText}>
+          <Text style={[styles.helperText, { color: colors.textSecondary }]}>
             Clearly define next steps for both counsellor and client.
           </Text>
         </View>
 
         {/* Severity Level Section */}
         <View style={styles.section}>
-          <Text style={styles.severityTitle}>Severity Level</Text>
+          <Text style={[styles.severityTitle, { color: colors.text }]}>Severity Level</Text>
           <View style={styles.severityContainer}>
             {severityOptions.map((option) => (
               <TouchableOpacity
@@ -300,6 +308,7 @@ const SessionDetailsScreen = ({ route, navigation }) => {
                 <Text
                   style={[
                     styles.severityButtonText,
+                    { color: colors.text },
                     severity === option.key && styles.severityButtonTextSelected,
                   ]}
                 >
@@ -318,7 +327,7 @@ const SessionDetailsScreen = ({ route, navigation }) => {
               onPress={handleSaveDraft}
               disabled={saving}
             >
-              <Text style={styles.saveDraftButtonText}>Save Draft</Text>
+              <Text style={[styles.saveDraftButtonText, { color: colors.text }]}>Save Draft</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -340,7 +349,6 @@ const SessionDetailsScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -348,9 +356,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     width: 40,
@@ -361,7 +367,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
     letterSpacing: 0.2,
   },
   headerSpacer: {

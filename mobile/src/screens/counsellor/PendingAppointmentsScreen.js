@@ -128,9 +128,9 @@ const PendingAppointmentsScreen = ({ navigation }) => {
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#F5A962']} />}
                 >
                     {/* Info Card */}
-                    <View style={[styles.infoCard, { backgroundColor: '#FFF4EC' }]}>
+                    <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                         <Icon name="information" size={24} color="#F5A962" style={styles.infoIcon} />
-                        <Text style={[styles.infoText, { color: '#333' }]}>
+                        <Text style={[styles.infoText, { color: colors.text }]}>
                             These students have requested appointments and are awaiting your confirmation.
                         </Text>
                     </View>
@@ -166,9 +166,9 @@ const PendingAppointmentsScreen = ({ navigation }) => {
                                             {appointment.student?.studentId || appointment.student?.anonymousUsername || 'Anonymous'}
                                         </Text>
                                     </View>
-                                    <View style={styles.statusBadge}>
+                                    <View style={[styles.statusBadge, { backgroundColor: colors.surface }]}>
                                         <Icon name="clock-outline" size={16} color="#F5A962" />
-                                        <Text style={styles.statusText}>Pending</Text>
+                                        <Text style={[styles.statusText, { color: '#F5A962' }]}>Pending</Text>
                                     </View>
                                 </View>
 
@@ -206,11 +206,11 @@ const PendingAppointmentsScreen = ({ navigation }) => {
                                         <Text style={styles.approveButtonText}>Approve</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={styles.declineButton}
+                                        style={[styles.declineButton, { backgroundColor: colors.surface }]}
                                         onPress={() => handleDecline(appointment._id || appointment.id)}
                                     >
                                         <Icon name="close" size={20} color="#FF6B6B" />
-                                        <Text style={styles.declineButtonText}>Decline</Text>
+                                        <Text style={[styles.declineButtonText, { color: '#FF6B6B' }]}>Decline</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -261,11 +261,11 @@ const styles = StyleSheet.create({
     },
     infoCard: {
         flexDirection: 'row',
-        backgroundColor: '#FFF4EC',
         borderRadius: 12,
         padding: 16,
         marginBottom: 20,
         alignItems: 'flex-start',
+        borderWidth: 1,
     },
     infoIcon: {
         marginRight: 12,
@@ -275,7 +275,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 14,
         lineHeight: 20,
-        color: '#333333',
     },
     countSection: {
         marginBottom: 20,
@@ -316,7 +315,6 @@ const styles = StyleSheet.create({
     statusBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFF4EC',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
@@ -324,7 +322,6 @@ const styles = StyleSheet.create({
     },
     statusText: {
         fontSize: 12,
-        color: '#F5A962',
         fontWeight: '600',
     },
     divider: {
@@ -368,7 +365,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFF4EC',
         paddingVertical: 12,
         borderRadius: 8,
         gap: 8,
@@ -378,7 +374,6 @@ const styles = StyleSheet.create({
     declineButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FF6B6B',
     },
     emptyState: {
         alignItems: 'center',

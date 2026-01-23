@@ -11,7 +11,7 @@ import { useTheme } from '../../context/ThemeContext';
 const ManagementProfileScreen = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { colors, isDarkMode, toggleDarkMode } = useTheme();
   const [dailyAffirmations, setDailyAffirmations] = useState(true);
 
   const profileSections = [
@@ -33,46 +33,46 @@ const ManagementProfileScreen = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container}>
-        <Card style={styles.profileCard}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+        <Card style={[styles.profileCard, { backgroundColor: colors.surface }]}>
           <Card.Content style={styles.profileHeader}>
             <Avatar.Icon
               size={80}
               icon="account-tie"
               style={styles.avatar}
             />
-            <Text style={styles.name}>{user?.name || 'Manager'}</Text>
-            <Text style={styles.role}>Management User</Text>
+            <Text style={[styles.name, { color: colors.text }]}>{user?.name || 'Manager'}</Text>
+            <Text style={[styles.role, { color: colors.textSecondary }]}>Management User</Text>
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: colors.surface }]}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>Profile Information</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile Information</Text>
             {profileSections.map((section, index) => (
               <View key={index}>
                 <View style={styles.infoRow}>
                   <Icon name={section.icon} size={24} color="#F5A962" />
                   <View style={styles.infoText}>
-                    <Text style={styles.infoLabel}>{section.title}</Text>
-                    <Text style={styles.infoValue}>{section.value}</Text>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{section.title}</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{section.value}</Text>
                   </View>
                 </View>
-                {index < profileSections.length - 1 && <Divider style={styles.divider} />}
+                {index < profileSections.length - 1 && <Divider style={[styles.divider, { backgroundColor: colors.border }]} />}
               </View>
             ))}
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: colors.surface }]}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>App Preferences</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>App Preferences</Text>
 
             <View style={styles.preferenceItem}>
               <View style={styles.preferenceInfo}>
-                <Text style={styles.preferenceLabel}>Daily Affirmations</Text>
-                <Text style={styles.preferenceDescription}>
+                <Text style={[styles.preferenceLabel, { color: colors.text }]}>Daily Affirmations</Text>
+                <Text style={[styles.preferenceDescription, { color: colors.textSecondary }]}>
                   Receive daily motivational quotes
                 </Text>
               </View>
@@ -86,8 +86,8 @@ const ManagementProfileScreen = () => {
 
             <View style={styles.preferenceItem}>
               <View style={styles.preferenceInfo}>
-                <Text style={styles.preferenceLabel}>Dark Mode</Text>
-                <Text style={styles.preferenceDescription}>
+                <Text style={[styles.preferenceLabel, { color: colors.text }]}>Dark Mode</Text>
+                <Text style={[styles.preferenceDescription, { color: colors.textSecondary }]}>
                   Enable dark theme for the app
                 </Text>
               </View>
@@ -101,9 +101,9 @@ const ManagementProfileScreen = () => {
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: colors.surface }]}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>Settings</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Settings</Text>
             <Button
               mode="outlined"
               icon="bell"

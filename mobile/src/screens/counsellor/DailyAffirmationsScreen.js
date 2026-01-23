@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput as RNTextInput, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput as RNTextInput, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Card } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -97,6 +97,10 @@ const DailyAffirmationsScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+            <StatusBar
+                barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+                backgroundColor={colors.background}
+            />
             {/* Header */}
             <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>

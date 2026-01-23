@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
 import { useTheme } from '../../context/ThemeContext';
+import { spacing } from '../../constants/theme';
+import { Heading } from '../../components/Typography';
 
 const SessionHistoryScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -69,15 +71,16 @@ const SessionHistoryScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
-        style={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        style={[styles.container, { backgroundColor: colors.background }]}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#F5A962']} />}
       >
         {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Session History</Text>
+          <Heading level={3} style={styles.headerTitle}>Session History</Heading>
           <View style={{ width: 28 }} />
         </View>
 
@@ -105,7 +108,7 @@ const SessionHistoryScreen = ({ navigation }) => {
               </View>
               {dateSessions.map((session) => (
                 <View key={session._id} style={[styles.sessionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <View style={styles.avatar}>
+                  <View style={[styles.avatar, { backgroundColor: colors.card }]}>
                     <Icon name="account" size={24} color={colors.textSecondary} />
                   </View>
                   <View style={styles.sessionInfo}>
@@ -131,11 +134,16 @@ const SessionHistoryScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+
+  },
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
@@ -146,18 +154,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 0,
+    paddingVertical: spacing.md,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000000',
     letterSpacing: 0.3,
   },
-  dateGroup: {
-    marginTop: 25,
-    paddingHorizontal: 20,
+  dateSection: {
+    marginTop: spacing.lg,
   },
   dateHeader: {
     flexDirection: 'row',
@@ -206,7 +212,7 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingTop: 100,
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.lg,
   },
   emptyText: {
     fontSize: 16,

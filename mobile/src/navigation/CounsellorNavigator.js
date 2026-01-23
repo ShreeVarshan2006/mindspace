@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 import CounsellorDashboard from '../screens/counsellor/CounsellorDashboard';
 import AvailabilityScreen from '../screens/counsellor/AvailabilityScreen';
@@ -53,6 +54,8 @@ const HomeStack = () => (
 );
 
 const CounsellorNavigator = () => {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -82,7 +85,12 @@ const CounsellorNavigator = () => {
           return <Icon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#F5A962',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+        },
         headerShown: false,
       })}
     >

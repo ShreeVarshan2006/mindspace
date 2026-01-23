@@ -92,6 +92,23 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+export const loginWithGoogle = createAsyncThunk(
+  'auth/loginWithGoogle',
+  async (_, { rejectWithValue }) => {
+    try {
+      const googleAuthService = require('../../services/googleAuthService').default;
+      const response = await googleAuthService.signInWithGoogle();
+
+      await storageService.setToken(response.token);
+      await storageService.setUser(response.user);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Google login failed');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -177,6 +194,22 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...action.payload };
       })
       .addCase(updateProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Google Login
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isOnboarded = action.payload.user.isOnboarded;
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       });

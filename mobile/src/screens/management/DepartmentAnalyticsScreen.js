@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
+import { Heading, BodySmall, Label as TypographyLabel } from '../../components/Typography';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fetchSessions } from '../../redux/slices/sessionSlice';
-import { spacing } from '../../constants/theme';
+import { spacing, typography } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 
 const DepartmentAnalyticsScreen = ({ navigation }) => {
@@ -92,30 +93,33 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        contentContainerStyle={{ paddingBottom: spacing.xxl }}
+      >
         {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Icon name="chevron-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Department Analytics</Text>
+          <Heading level={3} style={styles.headerTitle}>Department Analytics</Heading>
           <View style={styles.menuButton} />
         </View>
 
         {/* Filters Row 1 */}
         <View style={styles.filterContainer}>
           <TouchableOpacity
-            style={styles.filterPill}
+            style={[styles.filterPill, { backgroundColor: colors.surface, borderColor: '#F5A962' }]}
             onPress={() => setShowYearModal(true)}
           >
-            <Text style={styles.filterText}>Year of Study: {selectedYear}</Text>
+            <BodySmall style={styles.filterText}>Year of Study: {selectedYear}</BodySmall>
             <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.filterPill}
+            style={[styles.filterPill, { backgroundColor: colors.surface, borderColor: '#F5A962' }]}
             onPress={() => setShowDepartmentModal(true)}
           >
-            <Text style={styles.filterText}>Department: {selectedDepartment === 'All' ? 'All' : selectedDepartment}</Text>
+            <BodySmall style={styles.filterText}>Department: {selectedDepartment === 'All' ? 'All' : selectedDepartment}</BodySmall>
             <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
@@ -123,33 +127,33 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
         {/* Filters Row 2 */}
         <View style={styles.filterContainer}>
           <TouchableOpacity
-            style={styles.filterPill}
+            style={[styles.filterPill, { backgroundColor: colors.surface, borderColor: '#F5A962' }]}
             onPress={() => setShowMonthModal(true)}
           >
-            <Text style={styles.filterText}>Month: {selectedMonth}</Text>
+            <BodySmall style={styles.filterText}>Month: {selectedMonth}</BodySmall>
             <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.filterPill}
+            style={[styles.filterPill, { backgroundColor: colors.surface, borderColor: '#F5A962' }]}
             onPress={() => setShowCalendarYearModal(true)}
           >
-            <Text style={styles.filterText}>Calendar Year: {selectedCalendarYear}</Text>
+            <BodySmall style={styles.filterText}>Calendar Year: {selectedCalendarYear}</BodySmall>
             <Icon name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Chart */}
         <View style={styles.chartSection}>
-          <Text style={styles.chartTitle}>Counselling Sessions by Department</Text>
+          <Heading level={3} style={styles.chartTitle}>Counselling Sessions by Department</Heading>
 
           <View style={styles.chart}>
             {/* Y-axis labels */}
             <View style={styles.yAxis}>
-              <Text style={styles.yAxisLabel}>200</Text>
-              <Text style={styles.yAxisLabel}>150</Text>
-              <Text style={styles.yAxisLabel}>100</Text>
-              <Text style={styles.yAxisLabel}>50</Text>
-              <Text style={styles.yAxisLabel}>0</Text>
+              <TypographyLabel style={styles.yAxisLabel}>200</TypographyLabel>
+              <TypographyLabel style={styles.yAxisLabel}>150</TypographyLabel>
+              <TypographyLabel style={styles.yAxisLabel}>100</TypographyLabel>
+              <TypographyLabel style={styles.yAxisLabel}>50</TypographyLabel>
+              <TypographyLabel style={styles.yAxisLabel}>0</TypographyLabel>
             </View>
 
             {/* Bars */}
@@ -166,7 +170,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
                       ]}
                     />
                   </View>
-                  <Text style={styles.barLabel}>{dept.name}</Text>
+                  <TypographyLabel style={styles.barLabel}>{dept.name}</TypographyLabel>
                 </View>
               ))}
             </View>
@@ -176,26 +180,26 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
         {/* Stats Cards */}
         <View style={styles.statsGrid}>
           {/* Total Sessions */}
-          <View style={styles.statCardHalf}>
+          <View style={[styles.statCardHalf, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="chart-bar" size={24} color="#B8A8D8" />
-            <Text style={styles.statLabel}>Total Sessions</Text>
-            <Text style={styles.statValue}>{totalSessions.toLocaleString()}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Sessions</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>{totalSessions.toLocaleString()}</Text>
           </View>
 
           {/* Highest Utilized */}
-          <View style={styles.statCardHalf}>
+          <View style={[styles.statCardHalf, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="trending-up" size={24} color="#B8A8D8" />
-            <Text style={styles.statLabel}>Highest Utilized Dept</Text>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Highest Utilized Dept</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>
               {highestDept ? `${highestDept.name} (${highestDept.count})` : 'N/A'}
             </Text>
           </View>
 
           {/* Lowest Utilized */}
-          <View style={styles.statCardFull}>
+          <View style={[styles.statCardFull, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Icon name="trending-down" size={24} color="#B8A8D8" />
-            <Text style={styles.statLabel}>Lowest Utilized Dept</Text>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Lowest Utilized Dept</Text>
+            <Text style={[styles.statValue, { color: colors.text }]}>
               {lowestDept ? `${lowestDept.name} (${lowestDept.count})` : 'N/A'}
             </Text>
           </View>
@@ -216,7 +220,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filter Options</Text>
               <TouchableOpacity onPress={() => setShowYearModal(false)}>
-                <Icon name="close" size={24} color="#000000" />
+                <Icon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSubtitle}>Select Year</Text>
@@ -234,6 +238,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
               >
                 <Text style={[
                   styles.optionText,
+                  { color: colors.textSecondary },
                   selectedYear === 'All' && styles.optionTextSelected
                 ]}>All</Text>
               </TouchableOpacity>
@@ -251,6 +256,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
                 >
                   <Text style={[
                     styles.optionText,
+                    { color: colors.textSecondary },
                     selectedYear === year && styles.optionTextSelected
                   ]}>{year}</Text>
                 </TouchableOpacity>
@@ -282,7 +288,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filter Options</Text>
               <TouchableOpacity onPress={() => setShowDepartmentModal(false)}>
-                <Icon name="close" size={24} color="#000000" />
+                <Icon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSubtitle}>Select Department</Text>
@@ -300,6 +306,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
               >
                 <Text style={[
                   styles.optionText,
+                  { color: colors.textSecondary },
                   selectedDepartment === 'All' && styles.optionTextSelected
                 ]}>All</Text>
               </TouchableOpacity>
@@ -317,6 +324,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
                 >
                   <Text style={[
                     styles.optionText,
+                    { color: colors.textSecondary },
                     selectedDepartment === dept && styles.optionTextSelected
                   ]}>{dept}</Text>
                 </TouchableOpacity>
@@ -348,7 +356,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filter Options</Text>
               <TouchableOpacity onPress={() => setShowMonthModal(false)}>
-                <Icon name="close" size={24} color="#000000" />
+                <Icon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSubtitle}>Select Month</Text>
@@ -367,6 +375,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
                 >
                   <Text style={[
                     styles.optionText,
+                    { color: colors.textSecondary },
                     selectedMonth === 'All' && styles.optionTextSelected
                   ]}>All</Text>
                 </TouchableOpacity>
@@ -384,6 +393,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
                   >
                     <Text style={[
                       styles.optionText,
+                      { color: colors.textSecondary },
                       selectedMonth === month && styles.optionTextSelected
                     ]}>{month}</Text>
                   </TouchableOpacity>
@@ -416,7 +426,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filter Options</Text>
               <TouchableOpacity onPress={() => setShowCalendarYearModal(false)}>
-                <Icon name="close" size={24} color="#000000" />
+                <Icon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSubtitle}>Select Calendar Year</Text>
@@ -434,6 +444,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
               >
                 <Text style={[
                   styles.optionText,
+                  { color: colors.textSecondary },
                   selectedCalendarYear === 'All' && styles.optionTextSelected
                 ]}>All</Text>
               </TouchableOpacity>
@@ -451,6 +462,7 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
                 >
                   <Text style={[
                     styles.optionText,
+                    { color: colors.textSecondary },
                     selectedCalendarYear === year && styles.optionTextSelected
                   ]}>{year}</Text>
                 </TouchableOpacity>
@@ -476,31 +488,25 @@ const DepartmentAnalyticsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     padding: spacing.xs,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
+    ...typography.h3,
     flex: 1,
     textAlign: 'center',
-    letterSpacing: 0.15,
   },
   menuButton: {
     padding: spacing.xs,
@@ -523,8 +529,7 @@ const styles = StyleSheet.create({
     borderColor: '#F5A962',
   },
   filterText: {
-    fontSize: 14,
-    color: '#000000',
+    ...typography.bodySmall,
     fontWeight: '500',
   },
   chartSection: {
@@ -532,11 +537,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   chartTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
+    ...typography.h3,
     marginBottom: spacing.lg,
-    letterSpacing: 0.15,
   },
   chart: {
     flexDirection: 'row',
@@ -551,8 +553,7 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   yAxisLabel: {
-    fontSize: 12,
-    color: '#999999',
+    ...typography.label,
     textAlign: 'right',
   },
   barsContainer: {
@@ -561,7 +562,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'flex-end',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
     paddingBottom: 30,
   },
   barWrapper: {
@@ -582,8 +582,7 @@ const styles = StyleSheet.create({
     minHeight: 4,
   },
   barLabel: {
-    fontSize: 12,
-    color: '#000000',
+    ...typography.label,
     marginTop: spacing.sm,
     fontWeight: '400',
   },
@@ -613,16 +612,13 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   statLabel: {
-    fontSize: 14,
-    color: '#666666',
+    ...typography.bodySmall,
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
     fontWeight: '400',
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#000000',
+    ...typography.h2,
     letterSpacing: -0.5,
   },
   modalOverlay: {
@@ -645,13 +641,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
+    ...typography.h2,
   },
   modalSubtitle: {
-    fontSize: 16,
-    color: '#666666',
+    ...typography.bodySmall,
     marginBottom: 24,
   },
   optionsContainer: {
@@ -672,8 +665,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6B6B',
   },
   optionText: {
-    fontSize: 16,
-    fontWeight: '500',
+    ...typography.body,
     color: '#4A4A4A',
   },
   optionTextSelected: {
@@ -688,7 +680,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
   },
   clearButtonText: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '600',
     color: '#FF6B6B',
   },
